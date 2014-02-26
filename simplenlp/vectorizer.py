@@ -1,15 +1,12 @@
-'''
-Created on Feb 26, 2014
 
-@author: c3h3
-'''
 
-from sklearn.feature_extraction.text import CountVectorizer
-import numpy as np
+class DocumentTermScoresMatrix(dict):
+    def __init__(self, word_summery, sdtm):
+        self["word_summery"] = word_summery
+        self["sdtm"] = sdtm
+        
+    
 
-articles_df = None
-one_board = None
-one_uid = None
 
 
 class Text2Vec(dict):
@@ -27,12 +24,15 @@ class Text2Vec(dict):
         assert len(self["sdtm"].shape) >= axis
         return self["sdtm"].sum(axis=axis)/float(self["sdtm"].shape[axis])
     
-    def summerize_word_count(self):
+    def summerize_words(self):
         all_words = np.array(self["vec"].get_feature_names())
             
-        dt = np.dtype([('count', int), ('kws', "<U%s" % max(map(len,all_words))) ])
+        dt = np.dtype([('score', int),('word_len', int),('word_ix', int), ('word', "<U%s" % max(map(len,all_words))) ])
         
-        self["word_count"] = np.array(zip(self["sdtm"].sum(axis=0).tolist()[0],all_words),dtype=dt)
+        self["word_summery"] = np.array(zip(self["sdtm"].sum(axis=0).tolist()[0],
+                                            map(len,all_words),
+                                            np.arange(len(all_words)),
+                                            all_words),dtype=dt)
         
     
     def _get_top_k_words(self, top_k=None):
@@ -52,12 +52,27 @@ class Text2Vec(dict):
                 self.summerize_word_count()
                     
             if top_k > 0:
-                return np.sort(self["word_count"],order="count")[-top_k:]["kws"]
+                return np.sort(self["word_summery"],order="score")[-top_k:]["word"]
                 
             else:
-                return np.sort(self["word_count"],order="count")["kws"]
+                return np.sort(self["word_summery"],order="score")["word"]
+    
+    def _get_top_k_words_index(self, top_k=None):
+        assert isinstance(top_k, int)
+        if top_k == 0:
+            return []
+            
+        else: 
+            if not("word_count" in self):
+                self.summerize_words()
+                    
+            if top_k > 0:
+                return np.argsort(self["word_summery"],order="score")[-top_k:]
                 
-        
+            else:
+                return np.argsort(self["word_summery"],order="score")
+                
+    
     
     def get_top_words(self, top_k=None, top_p=None):
         assert isinstance(top_k, int) | isinstance(top_p, (int,float))
@@ -76,19 +91,35 @@ class Text2Vec(dict):
         elif isinstance(top_k, int):
             return self._get_top_k_words(top_k)
         
+    
+    def get_top_words_index(self, top_k=None, top_p=None):
+        assert isinstance(top_k, int) | isinstance(top_p, (int,float))
+        
+        if isinstance(top_p, (int,float)):
+            
+            _top_k = int(float(top_p)*self["sdtm"].shape[0])
+        
+            return self._get_top_k_words_index(_top_k)
+            
+        
+        elif isinstance(top_k, int):
+            return self._get_top_k_words_index(top_k)
             
             
             
                       
-        
+    
         
         
 
 
 
-def vectorize_text(df=articles_df, colname="title", query={},#{"Board":one_board, "user_id":one_uid}, 
-                   vect_gen=CountVectorizer, vect_gen_init_kwargs = {} #{"tokenizer":tokenize,"lowercase":False}
-                   ):    
+# def vectorize_text(df=articles_df, colname="title", query={"Board":one_board, "user_id":one_uid}, 
+#                    vect_gen=CountVectorizer, vect_gen_init_kwargs = {"tokenizer":tokenize,"lowercase":False}):    
+    
+def vectorize_text(df, colname, query={},
+                   vect_gen=CountVectorizer, 
+                   vect_gen_init_kwargs = {"tokenizer":tokenize,"lowercase":False}):    
     
     assert colname in df.columns
     
@@ -118,7 +149,3 @@ def vectorize_text(df=articles_df, colname="title", query={},#{"Board":one_board
     text2vec.fit(q_df[colname])
     
     return text2vec
-
-
-if __name__ == '__main__':
-    pass

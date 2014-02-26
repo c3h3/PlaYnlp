@@ -33,3 +33,8 @@ LectureNotePacketSciCompMeth.pdf
 recently_reading/
 
 lecture_videos/
+build/
+dist/
+simplenlp.egg-info/
+
+*.ipynb
