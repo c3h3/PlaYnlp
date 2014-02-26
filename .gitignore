@@ -1,0 +1,35 @@
+# Python #
+##########
+*.pyc
+
+
+# IPython Notebook #
+####################
+.ipynb_checkpoints
+
+# OS generated files #
+######################
+
+# R related #
+#############
+
+
+# eclipse related #
+###################
+.project
+.pydevproject
+
+# dataset related #
+###################
+*.csv
+
+LectureNotePacketSciCompMeth.pdf
+
+# animation related #
+#####################
+*.mp4
+
+
+recently_reading/
+
+lecture_videos/
