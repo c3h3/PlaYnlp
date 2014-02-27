@@ -37,4 +37,4 @@ build/
 dist/
 PlaYnlp.egg-info/
 
-*.ipynb
+ni_ipynbs/
