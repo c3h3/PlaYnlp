@@ -1,3 +1,28 @@
+# -*- coding: <encoding name>-*-
+'''
+Created on Feb 26, 2014
+
+@author: c3h3
+'''
+
+from sklearn.feature_extraction.text import CountVectorizer
+import numpy as np
+import jieba, nltk
+
+
+
+articles_df = None
+one_board = None
+one_uid = None
+
+
+def tokenize(text):
+    if isinstance(text,(str,unicode)):
+        return list(jieba.cut(nltk.clean_html(text)))
+    else:
+        return []
+
+
 
 
 class DocumentTermScoresMatrix(dict):
@@ -34,6 +59,9 @@ class Text2Vec(dict):
                                             np.arange(len(all_words)),
                                             all_words),dtype=dt)
         
+    
+    
+    
     
     def _get_top_k_words(self, top_k=None):
         assert isinstance(top_k, int)
@@ -149,3 +177,12 @@ def vectorize_text(df, colname, query={},
     text2vec.fit(q_df[colname])
     
     return text2vec
+
+
+if __name__ == '__main__':
+    pass
+    
+#    jieba.initialize()
+#    print map(repr,tokenize(u"柯文哲")
+#    jieba.add_word(u"柯文哲",3.0)
+#    print map(repr,tokenize(u"柯文哲")
