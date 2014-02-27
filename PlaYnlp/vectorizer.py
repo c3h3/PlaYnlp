@@ -15,6 +15,8 @@ articles_df = None
 one_board = None
 one_uid = None
 
+# TODO: segmentalizer
+tokenize_gen = lambda token: lambda text: list(token(text)) if isinstance(text,(str,unicode)) else [] 
 
 def tokenize(text):
     if isinstance(text,(str,unicode)):
@@ -181,7 +183,7 @@ def vectorize_text(df, colname, query={},
 
 if __name__ == '__main__':
     pass
-    
+
 #    jieba.initialize()
 #    print map(repr,tokenize(u"柯文哲")
 #    jieba.add_word(u"柯文哲",3.0)

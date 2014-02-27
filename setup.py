@@ -6,7 +6,7 @@ except ImportError:
 setup(
     name='PlaYnlp',
     version='0.0.1',
-    description='Simple NLP Tools',
+    description='PlaY NLP Toolkits',
     author='Chia Chi Chang & Willy Kuo',
     author_email='c3h3.tw@gmail.com & waitingkuo0527@gmail.com',
     packages=['PlaYnlp'],
