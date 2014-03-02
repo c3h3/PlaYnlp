@@ -27,7 +27,7 @@ def tokenize(text):
 
 
 
-class DocumentTermScoresMatrix(dict):
+class SparseDocumentTermMatrix(dict):
     def __init__(self, word_summery, sdtm):
         self["word_summery"] = word_summery
         self["sdtm"] = sdtm
@@ -62,6 +62,7 @@ class Text2Vec(dict):
                                             np.arange(len(all_words)),
                                             all_words),dtype=dt)
         
+    
     
     
     
