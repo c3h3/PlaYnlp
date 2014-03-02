@@ -54,9 +54,10 @@ class Text2Vec(dict):
     def summerize_words(self):
         all_words = np.array(self["vec"].get_feature_names())
             
-        dt = np.dtype([('score', int),('word_len', int),('word_ix', int), ('word', "<U%s" % max(map(len,all_words))) ])
+        dt = np.dtype([('score_sum', int),('score_sum_L0_norm', int),('word_len', int),('word_ix', int), ('word', "<U%s" % max(map(len,all_words))) ])
         
         self["word_summery"] = np.array(zip(self["sdtm"].sum(axis=0).tolist()[0],
+                                            self["sdtm"].sign().sum(axis=0).tolist()[0],
                                             map(len,all_words),
                                             np.arange(len(all_words)),
                                             all_words),dtype=dt)

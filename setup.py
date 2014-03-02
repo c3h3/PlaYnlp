@@ -15,6 +15,7 @@ setup(
         'numpy',
         'scipy',
         'jieba',
-        'nltk'
+        'nltk',
+        "pandas"
     ],
 )
