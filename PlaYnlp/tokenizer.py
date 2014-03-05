@@ -1,13 +1,13 @@
-'''
-Created on Feb 27, 2014
+# -*- coding: utf-8 -*-
 
-@author: c3h3
-'''
+
+import jieba, nltk
 
 ngram_no_filter = lambda text, n: (text[k:k+n] for k in range(len(text)-n+1))
 
 ngram = lambda text, n, filter_list=[]: (text[k:k+n] for k in range(len(text)-n+1) if not(text[k:k+n] in filter_list))
 
+tokenize_gen = lambda token: lambda text: list(token(text)) if isinstance(text,(str,unicode)) else [] 
 
 
 
