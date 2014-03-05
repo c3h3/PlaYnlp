@@ -1,13 +1,9 @@
 # -*- coding: utf-8 -*-
-'''
-Created on Feb 26, 2014
 
-@author: c3h3
-'''
 
-from .sparse import SparseDataFrame
 import numpy as np
-
+from sklearn.feature_extraction.text import CountVectorizer
+from .sparse import SparseDataFrame
 
 class SparseDocumentTermMatrixSummary(dict):
     
@@ -44,6 +40,7 @@ class SparseDocumentTermMatrixSummary(dict):
     @property
     def _filtered_terms(self):
         assert self['summary_data'].dtype == np.bool
+        
         return self["terms_idx"][self['summary_data']]
         
         
@@ -95,8 +92,71 @@ class SparseDocumentTermMatrix(SparseDataFrame):
             return SparseDocumentTermMatrixSummary(summary_data = _summary_data,
                                                    terms_idx = self["col_idx"])
             
+
+            
+
+            
+# def vectorize_text(df, colname, query={},
+#                    vect_gen=CountVectorizer, 
+#                    vect_gen_init_kwargs = {"tokenizer":tokenize,"lowercase":False}):    
+
+
+
+def vectorize_text(df, text_col=None, idx_col=None, 
+                   cond_query={},
+                   idx_query= [],
+                   vect_gen=CountVectorizer, 
+                   vect_gen_init_kwargs = {}):    
     
+    """ 
+    demo vect_gen_init_kwargs:
+    vect_gen_init_kwargs = {"tokenizer":tokenize,"lowercase":False} 
+    """
     
+    assert text_col in df.columns
+    
+    if len(cond_query.keys()):
+        
+        for c in cond_query:
+            assert c in df.columns
+    
+        query_conds = lambda :(df[i] == cond_query[i] for i in cond_query)
+    
+        qcs = query_conds()
+    
+        q_final = qcs.next()
+    
+        for q in qcs:
+            q_final = q_final & q
+    
+        q_df = df[q_final]
+        #print q_df.head()
+        
+    else:
+        q_df = df
+
+    
+    if len(idx_query) > 0:
+        q_df = q_df.ix[idx_query]
+
+    
+    vectorizer = vect_gen(**vect_gen_init_kwargs)
+    
+    vectorized_sdtm = vectorizer.fit_transform(q_df[text_col])
+    
+    if idx_col != None:
+        assert idx_col in df.columns
+        
+        return_sdtm = SparseDocumentTermMatrix(sdtm = vectorized_sdtm, 
+                                               term_idx=vectorizer.get_feature_names(), 
+                                               doc_idx=q_df[idx_col].values)
+    else:
+        return_sdtm = SparseDocumentTermMatrix(sdtm = vectorized_sdtm, 
+                                               term_idx=vectorizer.get_feature_names())
+    
+    return return_sdtm
+
+                
 
 
 if __name__ == '__main__':

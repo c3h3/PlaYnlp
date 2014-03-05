@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-'''
-Created on Mar 5, 2014
-
-@author: c3h3
-'''
 
 import numpy as np
 
@@ -58,7 +53,7 @@ class SparseDataFrame(dict):
     @property
     def _row_idx(self):
         return self["row_idx"]
-    
+
     
 
 if __name__ == '__main__':
