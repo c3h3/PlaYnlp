@@ -38,8 +38,12 @@ class SparseDocumentTermMatrixSummary(dict):
                           terms_idx = self["terms_idx"])
         
     @property
+    def _is_bool(self):
+        return self['summary_data'].dtype == np.bool
+    
+    @property
     def _filtered_terms(self):
-        assert self['summary_data'].dtype == np.bool
+        assert self._is_bool
         
         return self["terms_idx"][self['summary_data']]
         
