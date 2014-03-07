@@ -3,7 +3,7 @@
 
 import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
-from .sparse import SparseDataFrame
+from ._sparse import SparseDataFrame
 
 class SparseDocumentTermMatrixSummary(dict):
     
