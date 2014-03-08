@@ -29,6 +29,10 @@ LectureNotePacketSciCompMeth.pdf
 #####################
 *.mp4
 
+# pickle files      #
+#####################
+*.pickle
+
 
 recently_reading/
 

@@ -3,7 +3,7 @@
 import numpy as np
 
 
-class SparseSparseDataFrameSummary(dict):
+class SparseDataFrameSummary(dict):
     
     def __init__(self, summary_data, summary_idx, sdf=None):
         self["summary_data"] = summary_data
@@ -53,7 +53,7 @@ class SparseSparseDataFrameSummary(dict):
         return "sdf" in self.keys()
     
     @property
-    def _filtered_summary_idx(self):
+    def _filtered_idx(self):
         assert self._is_bool
         
         return self["summary_idx"][self['summary_data']]
@@ -63,15 +63,16 @@ class SparseSparseDataFrameSummary(dict):
         assert self._is_bool and self._has_sdf
         
         if self["sdf"].is_matched_col_shape(self['summary_data']):        
-            return self["sdf"].sub_sdf(select_col = self['summary_data'])
+            return self["sdf"].select_columns(select_col = self['summary_data'])
         
         if self["sdf"].is_matched_row_shape(self['summary_data']):        
-            return self["sdf"].sub_sdf(select_row = self['summary_data'])
+            return self["sdf"].select_rows(select_row = self['summary_data'])
         
 
 
 class SparseDataFrame(dict):
-    kmapper = {"sdtm":"smatrix"}
+    _key_mapper = {}
+    _summerizer_class = SparseDataFrameSummary
     
     def __init__(self, smatrix, col_idx=None, row_idx=None):
         self["smatrix"] = smatrix
@@ -113,8 +114,8 @@ class SparseDataFrame(dict):
             return self[key[1:]]
         else:
             
-            if key.startswith("_") and key[1:] in self.kmapper.keys() and self.kmapper[key[1:]] in self.keys():
-                return self[self.kmapper[key[1:]]]
+            if key.startswith("_") and key[1:] in self._key_mapper.keys() and self._key_mapper[key[1:]] in self.keys():
+                return self[self._key_mapper[key[1:]]]
             else:
                 return None
         
@@ -155,25 +156,32 @@ class SparseDataFrame(dict):
             
         
         if _summary_data.shape[0] == self["smatrix"].shape[0]:
-            return SparseSparseDataFrameSummary(summary_data = _summary_data,
-                                                summary_idx = self["row_idx"],
-                                                sdf = self)
+            return self._summerizer_class(summary_data = _summary_data,
+                                          summary_idx = self["row_idx"],
+                                          sdf = self)
             
         if _summary_data.shape[0] == self["smatrix"].shape[1]:
-            return SparseSparseDataFrameSummary(summary_data = _summary_data,
-                                                summary_idx = self["col_idx"],
-                                                sdf = self)
+            return self._summerizer_class(summary_data = _summary_data,
+                                          summary_idx = self["col_idx"],
+                                          sdf = self)
 
-        
-    def sub_sdf(self, select_col = None, select_row = None):
-        
+    
+    def select_columns(self, select_col = None):
         if select_col != None:
             _select_col_idx = select_col
         else:
             _select_col_idx = np.arange(len(self["col_idx"]))
-
+        
         new_col_idx = self["col_idx"][_select_col_idx]
         
+        new_smatrix = self["smatrix"][:,_select_col_idx]
+        
+        return type(self)(smatrix = new_smatrix,
+                          col_idx = new_col_idx,
+                          row_idx = self["row_idx"])
+    
+    
+    def select_rows(self, select_row = None):
         if select_row != None:
             _select_row_idx = select_row
         else:
@@ -181,12 +189,16 @@ class SparseDataFrame(dict):
 
         new_row_idx = self["row_idx"][_select_row_idx]
         
-        new_smatrix = self["smatrix"][_select_row_idx,:][:,_select_col_idx]
+        new_smatrix = self["smatrix"][_select_row_idx,:]
         
         return type(self)(smatrix = new_smatrix,
-                          col_idx = new_col_idx,
+                          col_idx = self["col_idx"],
                           row_idx = new_row_idx)
     
+    
+    def sub_sdf(self, select_col = None, select_row = None):
+        return self.select_columns(select_col).select_rows(select_row)
+        
     
     def is_matched_col_shape(self, vec):
         if isinstance(vec, list):
@@ -211,6 +223,9 @@ class SparseDataFrame(dict):
         
     def is_row_vec(self,vec):
         return self.is_matched_col_shape(vec)
+        
+        
+        
         
 
 if __name__ == '__main__':
