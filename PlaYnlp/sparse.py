@@ -11,6 +11,11 @@ class SparseDataFrameSummary(dict):
         
         if sdf != None:
             self["sdf"] = sdf
+            if self["sdf"].is_matched_col_shape(self['summary_data']):        
+                self["summary_type"] = "col"
+        
+            if self["sdf"].is_matched_row_shape(self['summary_data']):     
+                self["summary_type"] = "row"
             
         
     def __lt__(self, upper_bound):
@@ -57,7 +62,12 @@ class SparseDataFrameSummary(dict):
         assert self._is_bool
         
         return self["summary_idx"][self['summary_data']]
-        
+    
+    @property
+    def _summary_type(self):
+        assert self._has_sdf
+        return self["summary_type"]
+    
     @property
     def _sub_sdf(self):
         assert self._is_bool and self._has_sdf
