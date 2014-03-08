@@ -7,7 +7,7 @@ ngram_no_filter = lambda text, n: (text[k:k+n] for k in range(len(text)-n+1))
 
 ngram = lambda text, n, filter_list=[]: (text[k:k+n] for k in range(len(text)-n+1) if not(text[k:k+n] in filter_list))
 
-tokenize_gen = lambda token: lambda text: list(token(text)) if isinstance(text,(str,unicode)) else [] 
+tokenize_gen = lambda token_fn: lambda text: list(token_fn(text)) if isinstance(text,(str,unicode)) else [] 
 
 
 

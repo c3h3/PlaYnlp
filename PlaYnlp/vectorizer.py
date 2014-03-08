@@ -1,146 +1,37 @@
 # -*- coding: utf-8 -*-
 
-
-import numpy as np
+from .sparse import SparseDataFrame
 from sklearn.feature_extraction.text import CountVectorizer
-from ._sparse import SparseDataFrame
-
-class SparseDocumentTermMatrixSummary(dict):
-    
-    def __init__(self, summary_data, terms_idx, sdtm=None):
-        self["summary_data"] = summary_data
-        self["terms_idx"] = terms_idx
-        
-        if sdtm != None:
-            self["sdtm"] = sdtm
-            
-        
-    def __lt__(self, upper_bound):
-        return type(self)(summary_data = self["summary_data"] < upper_bound,
-                          terms_idx = self["terms_idx"],
-                          sdtm = self["sdtm"])
-    
-    def __le__(self, upper_bound):
-        return type(self)(summary_data = self["summary_data"] <= upper_bound,
-                          terms_idx = self["terms_idx"],
-                          sdtm = self["sdtm"])
-    
-    def __gt__(self, lower_bound):
-        return type(self)(summary_data = self["summary_data"] > lower_bound,
-                          terms_idx = self["terms_idx"],
-                          sdtm = self["sdtm"])
-        
-    def __ge__(self, lower_bound):
-        return type(self)(summary_data = self["summary_data"] > lower_bound,
-                          terms_idx = self["terms_idx"],
-                          sdtm = self["sdtm"])
-    
-    
-    def __and__(self, other_summary):
-        assert isinstance(other_summary, type(self))
-        assert np.array_equal(self["terms_idx"],other_summary["terms_idx"])
-        assert self['summary_data'].dtype == np.bool
-        assert other_summary['summary_data'].dtype == np.bool
-        
-        return type(self)(summary_data = self["summary_data"] &  other_summary['summary_data'],
-                          terms_idx = self["terms_idx"],
-                          sdtm = self["sdtm"])
-        
-    @property
-    def _is_bool(self):
-        return self['summary_data'].dtype == np.bool
-    
-    @property
-    def _has_sdtm(self):
-        return "sdtm" in self.keys()
-    
-    @property
-    def _filtered_terms(self):
-        assert self._is_bool
-        
-        return self["terms_idx"][self['summary_data']]
-        
-    @property
-    def _sub_sdtm(self):
-        assert self._is_bool and self._has_sdtm
-        
-        return self["sdtm"].sub_sdtm(select_col_idx = self['summary_data'])
-        
-        
-
 
 class SparseDocumentTermMatrix(SparseDataFrame):
-    def __init__(self, sdtm, term_idx=None, doc_idx=None):
-        
-        super(SparseDocumentTermMatrix,self).__init__(sdtm, term_idx, doc_idx)
-    
+    _key_mapper = {"sdtm":"smatrix",
+                   "term_idx":"col_idx",
+                   "doc_idx":"row_idx"}
     
     @property
     def T(self):
-        tr_sdtm = type(self)(sdtm = self["sdtm"].T,
-                            term_idx = self["row_idx"],
-                            doc_idx = self["col_idx"])
-        return tr_sdtm
+        tr_sdf = SparseTermDocumentMatrix(smatrix = self._sdtm.T,
+                                          row_idx = self._term_idx,
+                                          col_idx = self._doc_idx)
+        return tr_sdf
+    
+    
+class SparseTermDocumentMatrix(SparseDataFrame):
+    _key_mapper = {"stdm":"smatrix",
+                   "term_idx":"row_idx",
+                   "doc_idx":"col_idx"}
     
     @property
-    def _term_idx(self):
-        return self["col_idx"]
+    def T(self):
+        tr_sdf = SparseDocumentTermMatrix(smatrix = self._stdm.T,
+                                          col_idx = self._term_idx,
+                                          row_idx = self._doc_idx)
+        return tr_sdf
     
-    @property
-    def _doc_idx(self):
-        return self["row_idx"]
+
+
 
     
-    def summarize_sdtm(self, summarizer=lambda xx:xx.sum(axis=0)):
-    
-        summary_data = summarizer(self["sdtm"])
-        
-        if len(summary_data.shape) == 1:
-            _summary_data = summary_data
-        else:
-            assert len(summary_data.shape) == 2
-            assert summary_data.shape[0] == 1 or summary_data.shape[1] == 1
-            
-            if summary_data.shape[0] == 1:
-                _summary_data = np.array(summary_data)[0,:]
-            else:
-                _summary_data = np.array(summary_data)[:,0]
-            
-        
-        if _summary_data.shape[0] == self["sdtm"].shape[0]:
-            return SparseDocumentTermMatrixSummary(summary_data = _summary_data,
-                                                   terms_idx = self["row_idx"],
-                                                   sdtm = self)
-            
-        if _summary_data.shape[0] == self["sdtm"].shape[1]:
-            return SparseDocumentTermMatrixSummary(summary_data = _summary_data,
-                                                   terms_idx = self["col_idx"],
-                                                   sdtm = self)
-            
-    def sub_sdtm(self, select_col_idx = None, select_row_idx = None):
-        
-        if select_col_idx != None:
-            _select_col_idx = select_col_idx
-        else:
-            _select_col_idx = np.arange(len(self["col_idx"]))
-
-        new_col_idx = self["col_idx"][_select_col_idx]
-        
-        if select_row_idx != None:
-            _select_row_idx = select_row_idx
-        else:
-            _select_row_idx = np.arange(len(self["row_idx"]))
-
-        new_row_idx = self["row_idx"][_select_row_idx]
-        
-        new_sdtm = self["sdtm"][_select_row_idx,:][:,_select_col_idx]
-        
-        return type(self)(sdtm = new_sdtm,
-                          term_idx = new_col_idx,
-                          doc_idx = new_row_idx)
-            
-
-            
 def vectorize_text(df, text_col=None, idx_col=None, 
                    cond_query={},
                    idx_query= [],
@@ -186,15 +77,14 @@ def vectorize_text(df, text_col=None, idx_col=None,
     if idx_col != None:
         assert idx_col in df.columns
         
-        return_sdtm = SparseDocumentTermMatrix(sdtm = vectorized_sdtm, 
-                                               term_idx=vectorizer.get_feature_names(), 
-                                               doc_idx=q_df[idx_col].values)
+        return_sdtm = SparseDocumentTermMatrix(smatrix = vectorized_sdtm, 
+                                               col_idx=vectorizer.get_feature_names(), 
+                                               row_idx=q_df[idx_col].values)
     else:
-        return_sdtm = SparseDocumentTermMatrix(sdtm = vectorized_sdtm, 
-                                               term_idx=vectorizer.get_feature_names())
+        return_sdtm = SparseDocumentTermMatrix(smatrix = vectorized_sdtm, 
+                                               col_idx=vectorizer.get_feature_names())
     
     return return_sdtm
-
                 
 
 
