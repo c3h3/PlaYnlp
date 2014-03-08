@@ -4,6 +4,7 @@ import numpy as np
 
 
 class SparseDataFrameSummary(dict):
+    _key_mapper = {"data":"summary_data"}
     
     def __init__(self, summary_data, summary_idx, sdf=None):
         self["summary_data"] = summary_data
@@ -17,25 +18,36 @@ class SparseDataFrameSummary(dict):
             if self["sdf"].is_matched_row_shape(self['summary_data']):     
                 self["summary_type"] = "row"
                 
+                
     def __getattr__(self, key):
         
         if key.startswith("_") and key[1:] in self.keys():
             return self[key[1:]]
+        else:
+            
+            if key.startswith("_") and key[1:] in self._key_mapper.keys() and self._key_mapper[key[1:]] in self.keys():
+                return self[self._key_mapper[key[1:]]]
+            else:
+                return None
+            
         
     def __lt__(self, upper_bound):
         return type(self)(summary_data = self["summary_data"] < upper_bound,
                           summary_idx = self["summary_idx"],
                           sdf = self["sdf"])
     
+    
     def __le__(self, upper_bound):
         return type(self)(summary_data = self["summary_data"] <= upper_bound,
                           summary_idx = self["summary_idx"],
                           sdf = self["sdf"])
     
+    
     def __gt__(self, lower_bound):
         return type(self)(summary_data = self["summary_data"] > lower_bound,
                           summary_idx = self["summary_idx"],
                           sdf = self["sdf"])
+        
         
     def __ge__(self, lower_bound):
         return type(self)(summary_data = self["summary_data"] > lower_bound,
