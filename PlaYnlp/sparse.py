@@ -16,7 +16,11 @@ class SparseDataFrameSummary(dict):
         
             if self["sdf"].is_matched_row_shape(self['summary_data']):     
                 self["summary_type"] = "row"
-            
+                
+    def __getattr__(self, key):
+        
+        if key.startswith("_") and key[1:] in self.keys():
+            return self[key[1:]]
         
     def __lt__(self, upper_bound):
         return type(self)(summary_data = self["summary_data"] < upper_bound,
