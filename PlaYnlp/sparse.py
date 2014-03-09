@@ -182,12 +182,12 @@ class SparseDataFrame(dict):
     @property
     def summary(self):
         if self._has_default_summarizer:
-            return self.summarize_sdf(summarizer = self["summerizer"]) 
+            return self.summarize_sdf(summarizer = self["summarizer"]) 
             
     
     def change_default_summerizer(self, summarizer=None):
         if summarizer != None and hasattr(summarizer, '__call__'):
-            self["summerizer"] = summarizer
+            self["summarizer"] = summarizer
             return True
         else:
             return False
@@ -237,7 +237,7 @@ class SparseDataFrame(dict):
         return type(self)(smatrix = new_smatrix,
                           col_idx = new_col_idx,
                           row_idx = self["row_idx"],
-                          summarizer = self["summerizer"] if self._has_default_summarizer else None)
+                          summarizer = self["summarizer"] if self._has_default_summarizer else None)
     
     
     def select_rows(self, select_row = None):
@@ -256,7 +256,7 @@ class SparseDataFrame(dict):
         return type(self)(smatrix = new_smatrix,
                           col_idx = self["col_idx"],
                           row_idx = new_row_idx,
-                          summarizer = self["summerizer"] if self._has_default_summarizer else None)
+                          summarizer = self["summarizer"] if self._has_default_summarizer else None)
     
     
     def sub_sdf(self, select_col = None, select_row = None):
