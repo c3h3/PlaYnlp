@@ -175,7 +175,7 @@ class SparseDataFrame(dict):
     
     @property
     def _has_default_summarizer(self):
-        return "summerizer" in self.keys()
+        return "summarizer" in self.keys()
     
     
     @property
