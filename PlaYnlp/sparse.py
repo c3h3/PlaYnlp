@@ -169,7 +169,8 @@ class SparseDataFrame(dict):
     def T(self):
         tr_sdf = type(self)(smatrix = self["smatrix"].T,
                             col_idx = self["row_idx"],
-                            row_idx = self["col_idx"])
+                            row_idx = self["col_idx"],
+                            summarizer = self["summerizer"] if self._has_default_summarizer else None)
         return tr_sdf
     
     @property
