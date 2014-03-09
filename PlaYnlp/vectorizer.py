@@ -36,7 +36,8 @@ def vectorize_text(df, text_col=None, idx_col=None,
                    cond_query={},
                    idx_query= [],
                    vect_gen=CountVectorizer, 
-                   vect_gen_init_kwargs = {}):    
+                   vect_gen_init_kwargs = {},
+                   summarizer=None):    
     
     """ 
     demo vect_gen_init_kwargs:
@@ -79,10 +80,12 @@ def vectorize_text(df, text_col=None, idx_col=None,
         
         return_sdtm = SparseDocumentTermMatrix(smatrix = vectorized_sdtm, 
                                                col_idx=vectorizer.get_feature_names(), 
-                                               row_idx=q_df[idx_col].values)
+                                               row_idx=q_df[idx_col].values,
+                                               summarizer=summarizer)
     else:
         return_sdtm = SparseDocumentTermMatrix(smatrix = vectorized_sdtm, 
-                                               col_idx=vectorizer.get_feature_names())
+                                               col_idx=vectorizer.get_feature_names(),
+                                               summarizer=summarizer)
     
     return return_sdtm
                 
