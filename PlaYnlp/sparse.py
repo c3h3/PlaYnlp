@@ -193,8 +193,14 @@ class SparseDataFrame(dict):
 
     
     def select_columns(self, select_col = None):
+        
+        
+        
         if select_col != None:
-            _select_col_idx = select_col
+            if isinstance(select_col, self._summerizer_class) and select_col._is_bool:
+                _select_col_idx = select_col._data
+            else:
+                _select_col_idx = select_col
         else:
             _select_col_idx = np.arange(len(self["col_idx"]))
         
@@ -209,7 +215,10 @@ class SparseDataFrame(dict):
     
     def select_rows(self, select_row = None):
         if select_row != None:
-            _select_row_idx = select_row
+            if isinstance(select_row, self._summerizer_class) and select_row._is_bool:
+                _select_row_idx = select_row._data
+            else:
+                _select_row_idx = select_row
         else:
             _select_row_idx = np.arange(len(self["row_idx"]))
 
