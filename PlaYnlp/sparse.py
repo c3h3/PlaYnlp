@@ -2,6 +2,9 @@
 
 import numpy as np
 
+L1_norm_col_summarizer = lambda xx:np.abs(xx).sum(axis=0)
+L0_norm_col_summarizer = lambda xx:xx.sign().sum(axis=0)
+
 
 class SparseDataFrameSummary(dict):
     _key_mapper = {"data":"summary_data"}
@@ -100,7 +103,7 @@ class SparseDataFrame(dict):
     _key_mapper = {}
     _summerizer_class = SparseDataFrameSummary
     
-    def __init__(self, smatrix, col_idx=None, row_idx=None):
+    def __init__(self, smatrix, col_idx=None, row_idx=None, summarizer=None):
         self["smatrix"] = smatrix
         
         if col_idx != None:
@@ -131,6 +134,11 @@ class SparseDataFrame(dict):
                 
         else:
             self["row_idx"] = np.arange(self["smatrix"].shape[0])
+            
+        
+        if summarizer != None and hasattr(summarizer, '__call__'):
+            self["summarizer"] = summarizer
+            
     
     
     
@@ -165,6 +173,20 @@ class SparseDataFrame(dict):
         return tr_sdf
     
     
+    @property
+    def summary(self):
+        if "summerizer" in self.keys():
+            return self.summarize_sdf(summarizer = self["summerizer"]) 
+            
+    
+    def change_default_summerizer(self, summarizer=None):
+        if summarizer != None and hasattr(summarizer, '__call__'):
+            self["summerizer"] = summarizer
+            return True
+        else:
+            return False
+    
+    
     def summarize_sdf(self, summarizer=lambda xx:xx.sum(axis=0)):
     
         summary_data = summarizer(self["smatrix"])
@@ -193,8 +215,6 @@ class SparseDataFrame(dict):
 
     
     def select_columns(self, select_col = None):
-        
-        
         
         if select_col != None:
             if isinstance(select_col, self._summerizer_class) and select_col._is_bool:
