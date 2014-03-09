@@ -103,6 +103,7 @@ class SparseDataFrame(dict):
     _key_mapper = {}
     _summerizer_class = SparseDataFrameSummary
     
+    
     def __init__(self, smatrix, col_idx=None, row_idx=None, summarizer=None):
         self["smatrix"] = smatrix
         
@@ -119,8 +120,7 @@ class SparseDataFrame(dict):
         else:
             self["col_idx"] = np.arange(self["smatrix"].shape[1])
             
-            
-                
+                        
         if row_idx != None:
             assert isinstance(row_idx, (list, np.ndarray))
             
@@ -139,9 +139,7 @@ class SparseDataFrame(dict):
         if summarizer != None and hasattr(summarizer, '__call__'):
             self["summarizer"] = summarizer
             
-    
-    
-    
+        
     def __getattr__(self, key):
         
         if key.startswith("_") and key[1:] in self.keys():
@@ -152,6 +150,7 @@ class SparseDataFrame(dict):
                 return self[self._key_mapper[key[1:]]]
             else:
                 return None
+
         
 #     @property
 #     def _smatrix(self):
@@ -165,13 +164,15 @@ class SparseDataFrame(dict):
 #     def _row_idx(self):
 #         return self["row_idx"]
 
+
     @property
     def T(self):
         tr_sdf = type(self)(smatrix = self["smatrix"].T,
                             col_idx = self["row_idx"],
                             row_idx = self["col_idx"],
-                            summarizer = self["summerizer"] if self._has_default_summarizer else None)
+                            summarizer = self["summarizer"] if self._has_default_summarizer else None)
         return tr_sdf
+    
     
     @property
     def _has_default_summarizer(self):
