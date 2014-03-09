@@ -136,7 +136,7 @@ class SparseDataFrame(dict):
             self["row_idx"] = np.arange(self["smatrix"].shape[0])
             
         
-        if summarizer != None and hasattr(summarizer, '__call__'):
+        if summarizer != None and callable(summarizer):
             self["summarizer"] = summarizer
             
         
@@ -186,7 +186,7 @@ class SparseDataFrame(dict):
             
     
     def change_default_summerizer(self, summarizer=None):
-        if summarizer != None and hasattr(summarizer, '__call__'):
+        if summarizer != None and callable(summarizer):
             self["summarizer"] = summarizer
             return True
         else:
