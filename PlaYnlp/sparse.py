@@ -2,8 +2,15 @@
 
 import numpy as np
 
-L1_norm_col_summarizer = lambda xx:np.abs(xx).sum(axis=0)
-L0_norm_col_summarizer = lambda xx:xx.sign().sum(axis=0)
+#L1_norm_col_summarizer = lambda xx:np.abs(xx).sum(axis=0)
+#L0_norm_col_summarizer = lambda xx:xx.sign().sum(axis=0)
+
+def L1_norm_col_sum(xx):
+    return np.abs(xx).sum(axis=0)
+
+def L0_norm_col_sum(xx):
+    return xx.sign().sum(axis=0)
+    
 
 
 class SparseDataFrameSummary(dict):
@@ -139,7 +146,15 @@ class SparseDataFrame(dict):
         if summarizer != None and callable(summarizer):
             self["summarizer"] = summarizer
             
-        
+    
+    def __getstate__(self):
+        return self
+    
+     
+    def __setstate__(self, state):
+        self.__init__(self, **state)
+    
+    
     def __getattr__(self, key):
         
         if key.startswith("_") and key[1:] in self.keys():
@@ -193,7 +208,7 @@ class SparseDataFrame(dict):
             return False
     
     
-    def summarize_sdf(self, summarizer=lambda xx:xx.sum(axis=0)):
+    def summarize_sdf(self, summarizer=L1_norm_col_sum):
     
         summary_data = summarizer(self["smatrix"])
         
