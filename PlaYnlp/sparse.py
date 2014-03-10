@@ -5,10 +5,10 @@ import numpy as np
 #L1_norm_col_summarizer = lambda xx:np.abs(xx).sum(axis=0)
 #L0_norm_col_summarizer = lambda xx:xx.sign().sum(axis=0)
 
-def L1_norm_col_sum(xx):
+def L1_norm_col_summarizer(xx):
     return np.abs(xx).sum(axis=0)
 
-def L0_norm_col_sum(xx):
+def L0_norm_col_summarizer(xx):
     return xx.sign().sum(axis=0)
     
 
