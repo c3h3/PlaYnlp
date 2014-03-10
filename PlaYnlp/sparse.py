@@ -27,8 +27,16 @@ class SparseDataFrameSummary(dict):
         
             if self["sdf"].is_matched_row_shape(self['summary_data']):     
                 self["summary_type"] = "row"
-                
-                
+    
+        
+    def __getstate__(self):
+        pass
+    
+     
+    def __setstate__(self, state):
+        pass
+    
+             
     def __getattr__(self, key):
         
         if key.startswith("_") and key[1:] in self.keys():
@@ -148,11 +156,11 @@ class SparseDataFrame(dict):
             
     
     def __getstate__(self):
-        return self
+        pass
     
      
     def __setstate__(self, state):
-        self.__init__(self, **state)
+        pass
     
     
     def __getattr__(self, key):
