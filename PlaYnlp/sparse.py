@@ -208,7 +208,7 @@ class SparseDataFrame(dict):
             return False
     
     
-    def summarize_sdf(self, summarizer=L1_norm_col_sum):
+    def summarize_sdf(self, summarizer=L1_norm_col_summarizer):
     
         summary_data = summarizer(self["smatrix"])
         
