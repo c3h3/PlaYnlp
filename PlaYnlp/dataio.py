@@ -29,6 +29,8 @@ def write_pickle_file(obj, write_file, write_file_prefix=None, close_after_write
 
 def read_pickle_file(read_file, close_after_read=True):
     
+    read_results=None
+    
     if isinstance(read_file, file):
         assert not read_file.closed
         read_results = pickle.load(read_file)
