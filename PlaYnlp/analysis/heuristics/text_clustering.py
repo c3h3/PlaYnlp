@@ -31,7 +31,7 @@ def find_similar_texts(sdtm, init_group_idx=[], eps=0.1):
     return selected_post_idx
 
 
-def find_text_eps_neighborhood(sdtm, init_group_idx=[], eps=0.1, max_iters=50):
+def find_text_eps_neighborhood(sdtm, init_group_idx=[], eps=0.1, max_iters=50, max_gropu_size=50):
     
     n_iteration = 0
     
@@ -45,7 +45,7 @@ def find_text_eps_neighborhood(sdtm, init_group_idx=[], eps=0.1, max_iters=50):
     
     new_step_n_text = len(new_group_idx)
     
-    do_iteration = (old_step_n_text != new_step_n_text) and (n_iteration <= max_iters)
+    do_iteration = (old_step_n_text != new_step_n_text) and (n_iteration <= max_iters) and (len(new_group_idx) <= max_gropu_size) 
     
     while do_iteration:
         
@@ -62,9 +62,9 @@ def find_text_eps_neighborhood(sdtm, init_group_idx=[], eps=0.1, max_iters=50):
     
         new_step_n_text = len(new_group_idx)
     
-        do_iteration = (old_step_n_text != new_step_n_text) and (n_iteration <= max_iters)
+        do_iteration = (old_step_n_text != new_step_n_text) and (n_iteration <= max_iters) and (len(new_group_idx) <= max_gropu_size)
         
-    return new_group_idx
+    return new_group_idx if len(new_group_idx) > max_gropu_size else old_group_idx
 
 
 if __name__ == '__main__':
