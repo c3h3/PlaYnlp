@@ -6,8 +6,8 @@ from PlaYnlp.sparse import L1_norm_col_summarizer as L1_col_sum
 
 
 def find_similar_texts(sdtm, init_group_idx=[], eps=0.1):
-    print "~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-    print "init_group_idx = ",init_group_idx
+#    print "~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+#    print "init_group_idx = ",init_group_idx
     sdtm_proj_on_group_sdtm = sdtm.select_rows(init_group_idx)
     filtered_words_sdtm = sdtm.select_columns(sdtm_proj_on_group_sdtm.summary > 0)
     within_wieghts = filtered_words_sdtm.select_rows(init_group_idx).summary._data
@@ -19,14 +19,14 @@ def find_similar_texts(sdtm, init_group_idx=[], eps=0.1):
     words_weights = all_weights*within_wieghts
     words_weights = words_weights / words_weights.sum()
     
-    print "words_weights = ",words_weights
-    print "// ".join(filtered_words_sdtm._col_idx)
+#    print "words_weights = ",words_weights
+#    print "// ".join(filtered_words_sdtm._col_idx)
 
     sdtm_weighted_summary = filtered_words_sdtm.summarize_sdf(lambda xx:words_weights*xx.T)
     selected_post_idx = (sdtm_weighted_summary > eps)._filtered_idx
     
-    print "selected_post_idx = ",selected_post_idx
-    print "len(selected_post_idx) = ",len(selected_post_idx)
+#    print "selected_post_idx = ",selected_post_idx
+#    print "len(selected_post_idx) = ",len(selected_post_idx)
     
     return selected_post_idx
 
