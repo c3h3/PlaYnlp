@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-import pickle
+from .dataio import write_pickle_file
 
 #L1_norm_col_summarizer = lambda xx:np.abs(xx).sum(axis=0)
 #L0_norm_col_summarizer = lambda xx:xx.sign().sum(axis=0)
@@ -314,18 +314,23 @@ class SparseDataFrame(dict):
         
     def to_pickle_file(self, output_file, with_prefix=True, close_after_dump=True):
         
-        if isinstance(output_file, file):
-            assert not output_file.closed
-            pickle.dump(self, output_file)
-            
-            if close_after_dump:
-                output_file.close()
-                
+        return write_pickle_file(obj=self, 
+                                 write_file=output_file, 
+                                 write_file_prefix=with_prefix, 
+                                 close_after_write=close_after_dump)
         
-        elif isinstance(output_file, (str,unicode)):
-            #TODO: output_file includes filename and path 
-            with open(output_file, "wb") as wfile:
-                pickle.dump(self, wfile)
+#        if isinstance(output_file, file):
+#            assert not output_file.closed
+#            pickle.dump(self, output_file)
+#            
+#            if close_after_dump:
+#                output_file.close()
+#                
+#        
+#        elif isinstance(output_file, (str,unicode)):
+#            #TODO: output_file includes filename and path 
+#            with open(output_file, "wb") as wfile:
+#                pickle.dump(self, wfile)
         
         
                 
