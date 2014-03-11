@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
+import pickle
 
 #L1_norm_col_summarizer = lambda xx:np.abs(xx).sum(axis=0)
 #L0_norm_col_summarizer = lambda xx:xx.sign().sum(axis=0)
@@ -117,7 +118,7 @@ class SparseDataFrameSummary(dict):
 class SparseDataFrame(dict):
     _key_mapper = {}
     _summerizer_class = SparseDataFrameSummary
-    
+    _dump_file_prefix = "sdf"
     
     def __init__(self, smatrix, col_idx=None, row_idx=None, summarizer=None):
         self["smatrix"] = smatrix
@@ -311,6 +312,31 @@ class SparseDataFrame(dict):
         return self.is_matched_col_shape(vec)
         
         
+    def to_pickle_file(self, output_file, with_prefix=True, close_after_dump=True):
+        
+        if isinstance(output_file, file):
+            assert not output_file.closed
+            pickle.dump(self, output_file)
+            
+            if close_after_dump:
+                output_file.close()
+                
+        
+        elif isinstance(output_file, (str,unicode)):
+            #TODO: output_file includes filename and path 
+            with open(output_file, "wb") as wfile:
+                pickle.dump(self, wfile)
+        
+        
+                
+            
+            
+            
+            
+            
+            
+            
+            
         
         
 

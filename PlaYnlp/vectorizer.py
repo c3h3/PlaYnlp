@@ -7,6 +7,7 @@ class SparseDocumentTermMatrix(SparseDataFrame):
     _key_mapper = {"sdtm":"smatrix",
                    "term_idx":"col_idx",
                    "doc_idx":"row_idx"}
+    _dump_file_prefix = "sdtm"
     
     @property
     def T(self):
@@ -21,6 +22,7 @@ class SparseTermDocumentMatrix(SparseDataFrame):
     _key_mapper = {"stdm":"smatrix",
                    "term_idx":"row_idx",
                    "doc_idx":"col_idx"}
+    _dump_file_prefix = "stdm"
     
     @property
     def T(self):
@@ -36,10 +38,11 @@ class SparseTermDocumentMatrix(SparseDataFrame):
     
 def vectorize_text(df, text_col=None, idx_col=None, 
                    cond_query={},
-                   idx_query= [],
+                   idx_query=[],
                    vect_gen=CountVectorizer, 
-                   vect_gen_init_kwargs = {},
-                   summarizer=None):    
+                   vect_gen_init_kwargs={},
+                   summarizer=None,
+                   dump_out_pickle=None):    
     
     """ 
     demo vect_gen_init_kwargs:
@@ -88,6 +91,10 @@ def vectorize_text(df, text_col=None, idx_col=None,
         return_sdtm = SparseDocumentTermMatrix(smatrix = vectorized_sdtm, 
                                                col_idx=vectorizer.get_feature_names(),
                                                summarizer=summarizer)
+    
+    if isinstance(dump_out_pickle, (file, str, unicode)):
+        return_sdtm.to_pickle_file(output_file=dump_out_pickle)
+    
     
     return return_sdtm
                 
