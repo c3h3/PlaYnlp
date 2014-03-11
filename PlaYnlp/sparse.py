@@ -15,7 +15,8 @@ def L0_norm_col_summarizer(xx):
 
 
 class SparseDataFrameSummary(dict):
-    _key_mapper = {"data":"summary_data"}
+    _key_mapper = {"data":"summary_data",
+                   "idx":"summary_idx",}
     
     def __init__(self, summary_data, summary_idx, sdf=None):
         self["summary_data"] = summary_data
