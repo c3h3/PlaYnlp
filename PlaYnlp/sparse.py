@@ -90,6 +90,10 @@ class SparseDataFrameSummary(dict):
         return self['summary_data'].dtype == np.bool
     
     @property
+    def _is_sortable(self):
+        return isinstance(self['summary_data'].dtype, (np.int, np.float))
+    
+    @property
     def _has_sdf(self):
         return "sdf" in self.keys()
     
@@ -115,6 +119,7 @@ class SparseDataFrameSummary(dict):
         assert self._has_sdf
         return self["summary_type"]
     
+    
     @property
     def _sub_sdf(self):
         assert self._is_bool and self._has_sdf
@@ -125,8 +130,21 @@ class SparseDataFrameSummary(dict):
         if self["sdf"].is_matched_row_shape(self['summary_data']):        
             return self["sdf"].select_rows(select_row = self['summary_data'])
         
+    @property
+    def _argsort_ptr(self):
+        assert self._is_sortable
+        return self._data.argsort()
+        
+    def top_k_ptrs(self, k=20, reversed=False):
+        if reversed:
+            return self._argsort_ptr[:k]
+        else:
+            return self._argsort_ptr[-k:]
 
-
+    def top_k_idx(self, k=20, reversed=False):
+        return self._idx[self.top_k_ptrs(k,reversed)]
+    
+    
 class SparseDataFrame(dict):
     _key_mapper = {}
     _summerizer_class = SparseDataFrameSummary
