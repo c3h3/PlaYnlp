@@ -102,8 +102,13 @@ class SparseDataFrameSummary(dict):
     @property
     def _filtered_ptr(self):
         assert self._is_bool
-    
-        return np.nonzero(self['summary_data'])
+        
+        _ptr = np.nonzero(self['summary_data'])
+
+        if len(_ptr) == 1:
+            _ptr = _ptr[0]
+            
+        return _ptr
     
     @property
     def _summary_type(self):
