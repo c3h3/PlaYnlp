@@ -28,7 +28,7 @@ def find_similar_text_ptrs(sdtm, init_group_ptr=[], eps=0.1):
     
     sdtm_weighted_summary = filtered_words_sdtm.summarize_sdf(lambda xx:words_weights*xx.T)
     #    selected_post_idx = (sdtm_weighted_summary > eps)._filtered_idx
-    selected_post_ptr = (sdtm_weighted_summary > eps)._filtered_ptr
+    selected_post_ptr = (sdtm_weighted_summary > eps)._filtered_ptrs
     
     return selected_post_ptr
     
