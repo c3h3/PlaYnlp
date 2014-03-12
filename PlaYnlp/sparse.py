@@ -89,9 +89,9 @@ class SparseDataFrameSummary(dict):
     def _is_bool(self):
         return self['summary_data'].dtype == np.bool
     
-    @property
-    def _is_sortable(self):
-        return isinstance(self['summary_data'].dtype, (np.int, np.float))
+#    @property
+#    def _is_sortable(self):
+#        return isinstance(self['summary_data'].dtype, (np.int, np.float))
     
     @property
     def _has_sdf(self):
@@ -104,7 +104,7 @@ class SparseDataFrameSummary(dict):
         return self["summary_idx"][self['summary_data']]
     
     @property
-    def _filtered_ptr(self):
+    def _filtered_ptrs(self):
         assert self._is_bool
         
         _ptr = np.nonzero(self['summary_data'])
@@ -131,15 +131,15 @@ class SparseDataFrameSummary(dict):
             return self["sdf"].select_rows(select_row = self['summary_data'])
         
     @property
-    def _argsort_ptr(self):
-        assert self._is_sortable
+    def _argsort_ptrs(self):
+#        assert self._is_sortable
         return self._data.argsort()
         
     def top_k_ptrs(self, k=20, reversed=False):
         if reversed:
-            return self._argsort_ptr[:k]
+            return self._argsort_ptrs[:k]
         else:
-            return self._argsort_ptr[-k:]
+            return self._argsort_ptrs[-k:]
 
     def top_k_idx(self, k=20, reversed=False):
         return self._idx[self.top_k_ptrs(k,reversed)]
