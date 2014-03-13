@@ -62,7 +62,7 @@ def find_stable_eps_neighborhood(sdtm, init_group_ptr=[], eps=0.1, max_iters=50,
     
         new_step_n_text = len(new_group_ptr)
     
-        do_iteration = (old_step_n_text != new_step_n_text) and (n_iteration <= max_iters) and (len(new_group_ptr) <= max_gropu_size)
+        do_iteration = (old_step_n_text != new_step_n_text) and (n_iteration <= max_iters) and (len(new_group_ptr) <= max_group_size)
         
     return new_group_ptr if len(new_group_ptr) > max_group_size else old_group_ptr
 
