@@ -29,7 +29,7 @@ def get_topk_neighborhood_ptrs(sdtm, init_group_ptr=[], k=20, reverse=False):
     return weighted_features_summarizer(sdtm=sdtm, init_group_ptr=init_group_ptr).top_k_ptrs(k, reverse)
 
 
-def find_stable_eps_neighborhood(sdtm, init_group_ptr=[], eps=0.1, max_iters=50, max_gropu_size=50):
+def find_stable_eps_neighborhood(sdtm, init_group_ptr=[], eps=0.1, max_iters=50, max_group_size=50):
 
     #TODO: if not isinstance(init_group_ptr, (np.int,np.bool)):
     
@@ -45,7 +45,7 @@ def find_stable_eps_neighborhood(sdtm, init_group_ptr=[], eps=0.1, max_iters=50,
     
     new_step_n_text = len(new_group_ptr)
     
-    do_iteration = (old_step_n_text != new_step_n_text) and (n_iteration <= max_iters) and (len(new_group_ptr) <= max_gropu_size) 
+    do_iteration = (old_step_n_text != new_step_n_text) and (n_iteration <= max_iters) and (len(new_group_ptr) <= max_group_size) 
     
     while do_iteration:
         
@@ -64,7 +64,7 @@ def find_stable_eps_neighborhood(sdtm, init_group_ptr=[], eps=0.1, max_iters=50,
     
         do_iteration = (old_step_n_text != new_step_n_text) and (n_iteration <= max_iters) and (len(new_group_ptr) <= max_gropu_size)
         
-    return new_group_ptr if len(new_group_ptr) > max_gropu_size else old_group_ptr
+    return new_group_ptr if len(new_group_ptr) > max_group_size else old_group_ptr
 
 
 def find_stable_topk_neighborhood(sdtm, init_group_ptr=[], k=20, max_iters=50, min_eps=0.05, reverse=False):
