@@ -135,14 +135,14 @@ class SparseDataFrameSummary(dict):
 #        assert self._is_sortable
         return self._data.argsort()
         
-    def top_k_ptrs(self, k=20, reversed=False):
+    def top_k_ptrs(self, k=20, reverse=False):
         if reversed:
             return self._argsort_ptrs[:k]
         else:
             return self._argsort_ptrs[-k:]
 
-    def top_k_idx(self, k=20, reversed=False):
-        return self._idx[self.top_k_ptrs(k,reversed)]
+    def top_k_idx(self, k=20, reverse=False):
+        return self._idx[self.top_k_ptrs(k,reverse)]
     
     
 class SparseDataFrame(dict):
