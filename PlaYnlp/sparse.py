@@ -136,7 +136,7 @@ class SparseDataFrameSummary(dict):
         return self._data.argsort()
         
     def top_k_ptrs(self, k=20, reverse=False):
-        if reversed:
+        if reverse:
             return self._argsort_ptrs[:k]
         else:
             return self._argsort_ptrs[-k:]
