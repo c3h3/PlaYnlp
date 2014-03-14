@@ -68,7 +68,13 @@ class WieghtedFeaturesNeighborhood(dict):
                           inversed_summarizer = self._inversed_summarizer)
 
 
-    def find_stable_topk_neighborhood_ptrs(self, k=20, max_iters=50, min_eps=0.1, reverse=False, return_only_ptrs=True):
+    def find_stable_topk_neighborhood(self, k=20, max_iters=50, min_eps=0.1, reverse=False, return_type="ptr"):
+        """
+        return_type in ("ptr","idx","nbhd")
+        """
+        
+        assert return_type in ("ptr","idx","nbhd")
+        
         n_iteration = 0
     
         old_neighborhood = self
@@ -103,10 +109,13 @@ class WieghtedFeaturesNeighborhood(dict):
         
         return_neighborhood = new_neighborhood 
         
-        if return_only_ptrs:
+        
+        if return_type == "ptr":
             return return_neighborhood._init_ptrs
-        else:
+        elif return_type == "nbhd":
             return return_neighborhood
+        elif return_type == "idx":
+            return self._sdtm._row_idx[return_neighborhood._init_ptrs]
 
         
     def get_mins_neighbors_ptrs(self, mins=0.1):
@@ -119,7 +128,13 @@ class WieghtedFeaturesNeighborhood(dict):
                           inversed_summarizer = self._inversed_summarizer)
     
 
-    def find_stable_mins_neighborhood(self, mins=0.1, max_iters=50, max_group_size=50, return_only_ptrs=True):
+    def find_stable_mins_neighborhood(self, mins=0.1, max_iters=50, max_group_size=50, return_type="ptr"):
+        """
+        return_type in ("ptr","idx","nbhd")
+        """
+        
+        assert return_type in ("ptr","idx","nbhd")
+        
         n_iteration = 0
     
         old_neighborhood = self
@@ -152,15 +167,17 @@ class WieghtedFeaturesNeighborhood(dict):
         
         return_neighborhood = new_neighborhood if  len(new_neighborhood_ptrs_set) > max_group_size else old_neighborhood
         
-        if return_only_ptrs:
+        if return_type == "ptr":
             return return_neighborhood._init_ptrs
-        else:
+        elif return_type == "nbhd":
             return return_neighborhood
+        elif return_type == "idx":
+            return self._sdtm._row_idx[return_neighborhood._init_ptrs]
+
 
         
         
-    
-    
+        
 
 
 def weighted_features_summarizer(sdtm, init_group_ptr):
