@@ -13,9 +13,21 @@ class WieghtedFeaturesNeighborhood(dict):
     def __init__(self, sdtm, init_ptrs, inversed_summarizer=L1_col_sum):
         self["sdtm"] = sdtm
         self["init_ptrs"] = init_ptrs
-        self["projected_sdtm"] = self["sdtm"].select_columns(self["sdtm"].select_rows(self["init_ptrs"]).summary > 0)
-        self["inversed_summarizer"] = inversed_summarizer
         
+        if self._has_active_features:
+            self["projected_sdtm"] = self["sdtm"].select_columns(self["sdtm"].select_rows(self["init_ptrs"]).summary > 0)
+            self["inversed_summarizer"] = inversed_summarizer
+    
+    
+    @property
+    def _active_features_ptrs(self):
+        return (self["sdtm"].select_rows(self["init_ptrs"]).summary > 0)._filtered_ptrs
+    
+    @property
+    def _has_active_features(self):
+        return len(self._active_features_ptrs) > 0 
+        
+    
         
     def __getstate__(self):
         pass
@@ -39,28 +51,40 @@ class WieghtedFeaturesNeighborhood(dict):
     
     @property
     def _within_wieghts(self):
-        return self["projected_sdtm"].select_rows(self["init_ptrs"]).summary._data
+        if self._has_active_features:
+            return self["projected_sdtm"].select_rows(self["init_ptrs"]).summary._data
     
     
     @property
     def _all_inversed_wieghts(self):
-        return 1.0 / self["projected_sdtm"].summarize_sdf(self["inversed_summarizer"])._data
+        if self._has_active_features:
+            return 1.0 / self["projected_sdtm"].summarize_sdf(self["inversed_summarizer"])._data
     
     
     @property
     def _words_weights(self):
-        temp_words_weights = self._all_inversed_wieghts*self._within_wieghts 
-        return temp_words_weights / temp_words_weights.sum()
+        if self._has_active_features:
+            temp_words_weights = self._all_inversed_wieghts*self._within_wieghts 
+            return temp_words_weights / temp_words_weights.sum()
 
     
     @property
     def _weighted_summary(self):
-        return self["projected_sdtm"].summarize_sdf(lambda xx:self._words_weights*xx.T)
+        if self._has_active_features:
+            return self["projected_sdtm"].summarize_sdf(lambda xx:self._words_weights*xx.T)
     
     
     def get_topk_neighbors_ptrs(self, k=20,  reverse=False):
-        return self._weighted_summary.top_k_ptrs(k, reverse)
-
+        if self._has_active_features:
+            return self._weighted_summary.top_k_ptrs(k, reverse)
+        else:
+            return self["init_ptrs"]
+            
+    
+    
+    def get_topk_neighbors_idx(self, k=20, reverse=False):
+        return self._sdtm._row_idx[self.get_topk_neighbors_ptrs(k=k, reverse=reverse)]
+        
     
     def get_topk_neighbors(self, k=20,  reverse=False):
         return type(self)(sdtm = self._sdtm,
@@ -119,9 +143,17 @@ class WieghtedFeaturesNeighborhood(dict):
 
         
     def get_mins_neighbors_ptrs(self, mins=0.1):
-        return (self._weighted_summary >= mins)._filtered_ptrs
+        if self._has_active_features:
+            return (self._weighted_summary >= mins)._filtered_ptrs
+        else:
+            return self["init_ptrs"]
         
         
+    
+    def get_mins_neighbors_idx(self, mins=0.1):
+        return self._sdtm._col_idx[self.get_mins_neighbors_ptrs(mins=mins)]
+    
+    
     def get_mins_neighbors(self, mins=0.1):
         return type(self)(sdtm = self._sdtm,
                           init_ptrs = self.get_mins_neighbors_ptrs(mins=mins),
