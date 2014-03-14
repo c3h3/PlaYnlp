@@ -75,10 +75,12 @@ class WieghtedFeaturesNeighborhood(dict):
             return self["projected_sdtm"].summarize_sdf(lambda xx:self._words_weights*xx.T)
     
     
-    def get_topk_within_weights_words(self, k=5):
+    
+    def get_topk_words_of_within_weights(self, k=5):
         return self._proj_sdtm.summarize_sdf(lambda xx:self._within_wieghts).top_k_idx(k)
     
-    def get_topk_weights_words(self, k=5):
+    
+    def get_topk_words_of_weights(self, k=5):
         return self._proj_sdtm.summarize_sdf(lambda xx:self._words_weights).top_k_idx(k)
         
     
