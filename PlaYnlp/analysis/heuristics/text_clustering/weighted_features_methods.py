@@ -23,6 +23,7 @@ class WieghtedFeaturesNeighborhood(dict):
     def _active_features_ptrs(self):
         return (self["sdtm"].select_rows(self["init_ptrs"]).summary > 0)._filtered_ptrs
     
+    
     @property
     def _has_active_features(self):
         return len(self._active_features_ptrs) > 0 
@@ -72,6 +73,14 @@ class WieghtedFeaturesNeighborhood(dict):
     def _weighted_summary(self):
         if self._has_active_features:
             return self["projected_sdtm"].summarize_sdf(lambda xx:self._words_weights*xx.T)
+    
+    
+    def get_topk_within_weights_words(self, k=5):
+        return self._proj_sdtm.summarize_sdf(lambda xx:self._within_wieghts).top_k_idx(k)
+    
+    def get_topk_weights_words(self, k=5):
+        return self._proj_sdtm.summarize_sdf(lambda xx:self._words_weights).top_k_idx(k)
+        
     
     
     def get_topk_neighbors_ptrs(self, k=20,  reverse=False):
