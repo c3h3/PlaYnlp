@@ -6,7 +6,8 @@ from sklearn.feature_extraction.text import CountVectorizer
 class SparseDocumentTermMatrix(SparseDataFrame):
     _key_mapper = {"sdtm":"smatrix",
                    "term_idx":"col_idx",
-                   "doc_idx":"row_idx"}
+                   "doc_idx":"row_idx",
+                   "vec":"vectorizer"}
     _dump_file_prefix = "sdtm"
     
     @property
@@ -14,14 +15,17 @@ class SparseDocumentTermMatrix(SparseDataFrame):
         tr_sdf = SparseTermDocumentMatrix(smatrix = self._sdtm.T,
                                           row_idx = self._term_idx,
                                           col_idx = self._doc_idx,
-                                          summarizer = self["summarizer"] if self._has_default_summarizer else None)
+                                          summarizer = self["summarizer"] if self._has_default_summarizer else None,
+                                          vectorizer = self["summarizer"] if "vectorizer" in self.keys() else None)
         return tr_sdf
     
     
 class SparseTermDocumentMatrix(SparseDataFrame):
     _key_mapper = {"stdm":"smatrix",
                    "term_idx":"row_idx",
-                   "doc_idx":"col_idx"}
+                   "doc_idx":"col_idx",
+                   "vec":"vectorizer"}
+    
     _dump_file_prefix = "stdm"
     
     @property
@@ -29,7 +33,8 @@ class SparseTermDocumentMatrix(SparseDataFrame):
         tr_sdf = SparseDocumentTermMatrix(smatrix = self._stdm.T,
                                           col_idx = self._term_idx,
                                           row_idx = self._doc_idx,
-                                          summarizer = self["summarizer"] if self._has_default_summarizer else None)
+                                          summarizer = self["summarizer"] if self._has_default_summarizer else None,
+                                          vectorizer = self["summarizer"] if "vectorizer" in self.keys() else None)
         return tr_sdf
     
 
@@ -86,11 +91,13 @@ def vectorize_text(df, text_col=None, idx_col=None,
         return_sdtm = SparseDocumentTermMatrix(smatrix = vectorized_sdtm, 
                                                col_idx=vectorizer.get_feature_names(), 
                                                row_idx=q_df[idx_col].values,
-                                               summarizer=summarizer)
+                                               summarizer=summarizer,
+                                               vectorizer=vectorizer)
     else:
         return_sdtm = SparseDocumentTermMatrix(smatrix = vectorized_sdtm, 
                                                col_idx=vectorizer.get_feature_names(),
-                                               summarizer=summarizer)
+                                               summarizer=summarizer,
+                                               vectorizer=vectorizer)
     
     if isinstance(dump_out_pickle, (file, str, unicode)):
         return_sdtm.to_pickle_file(output_file=dump_out_pickle)

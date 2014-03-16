@@ -18,7 +18,7 @@ class SparseDataFrameSummary(dict):
     _key_mapper = {"data":"summary_data",
                    "idx":"summary_idx",}
     
-    def __init__(self, summary_data, summary_idx, sdf=None):
+    def __init__(self, summary_data, summary_idx, sdf=None, **kwargs):
         self["summary_data"] = summary_data
         self["summary_idx"] = summary_idx
         
@@ -30,6 +30,8 @@ class SparseDataFrameSummary(dict):
             if self["sdf"].is_matched_row_shape(self['summary_data']):     
                 self["summary_type"] = "row"
     
+        self.update(kwargs)
+        
         
     def __getstate__(self):
         pass
