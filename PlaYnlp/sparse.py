@@ -419,7 +419,11 @@ class SparseDataFrame(dict):
         # compute appended smatrix and convert to csc
         appended_smatrix = sp.sparse.vstack([ext_self._smatrix, append_sdf_rows]).tocsc()
         
-        ext_row_idx = np.r_[ext_self._row_idx, sdf._row_idx]
+        if len(np.intersect1d(ext_self._row_idx, sdf._row_idx)) > 0:
+            ext_row_idx = None
+        else:
+            ext_row_idx = np.r_[ext_self._row_idx, sdf._row_idx]
+            
         
         return type(self)(smatrix = appended_smatrix,
                               col_idx = ext_self._col_idx,
