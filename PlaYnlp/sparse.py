@@ -428,7 +428,7 @@ class SparseDataFrame(dict):
     
     
     @property
-    def to_pamdas_df(self):
+    def to_pandas_df(self):
         #TODO: write a general converting output class Convert and interfaces
         #sdf.to = Convert(self, ...)
         #sdf.to.pandas = Convert(sdf, ...).pandas ... 
