@@ -91,13 +91,11 @@ def vectorize_text(df, text_col=None, idx_col=None,
         return_sdtm = SparseDocumentTermMatrix(smatrix = vectorized_sdtm, 
                                                col_idx=vectorizer.get_feature_names(), 
                                                row_idx=q_df[idx_col].values,
-                                               summarizer=summarizer,
-                                               vectorizer=vectorizer)
+                                               summarizer=summarizer)#,vectorizer=vectorizer)
     else:
         return_sdtm = SparseDocumentTermMatrix(smatrix = vectorized_sdtm, 
                                                col_idx=vectorizer.get_feature_names(),
-                                               summarizer=summarizer,
-                                               vectorizer=vectorizer)
+                                               summarizer=summarizer)#,vectorizer=vectorizer)
     
     if isinstance(dump_out_pickle, (file, str, unicode)):
         return_sdtm.to_pickle_file(output_file=dump_out_pickle)

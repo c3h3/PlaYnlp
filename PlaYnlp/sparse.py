@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
+import scipy as sp
+import pandas as pd
 from .dataio import write_pickle_file
 
 #L1_norm_col_summarizer = lambda xx:np.abs(xx).sum(axis=0)
@@ -363,6 +365,55 @@ class SparseDataFrame(dict):
 #            #TODO: output_file includes filename and path 
 #            with open(output_file, "wb") as wfile:
 #                pickle.dump(self, wfile)
+
+        
+    def find_col_ptrs(self, finding_idx):
+        
+        # check finding_idx is subset of self._col_idx
+        assert len(np.setdiff1d(finding_idx,self._col_idx)) == 0
+        
+        return np.r_[map(lambda xx:np.nonzero(self._col_idx == xx)[0],finding_idx)].T[0]
+        
+    
+    def extend_zeros_cols(self, sdf):
+        
+        sdf_diff_self_col_idx = np.setdiff1d(sdf._col_idx, self._col_idx)
+        
+        # subset checking: 
+        if len(sdf_diff_self_col_idx) > 0:
+            
+            # if it is not subset, extending self._col_idx
+            
+            ext_zeros_cols = type(self._smatrix)((self._smatrix.shape[0],len(sdf_diff_self_col_idx)),
+                                                 dtype=self._smatrix.dtype)
+            
+            extended_smatrix = sp.sparse.hstack([self._smatrix, ext_zeros_cols]).tocsc()
+            
+            extended_col_idx = np.r_[self._col_idx,sdf_diff_self_col_idx]
+            
+            
+            return type(self)(smatrix = extended_smatrix,
+                              col_idx = extended_col_idx,
+                              row_idx = self["row_idx"],
+                              summarizer = self["summarizer"] if self._has_default_summarizer else None)
+        
+        
+        else:
+            # if it is subset, do nothing
+            return self
+    
+    
+    @property
+    def to_pamdas_df(self):
+        #TODO: write a general converting output class Convert and interfaces
+        #sdf.to = Convert(self, ...)
+        #sdf.to.pandas = Convert(sdf, ...).pandas ... 
+        
+        return pd.DataFrame(self._smatrix.todense(), columns=self._col_idx, index=self._row_idx)
+        
+        
+        
+        
         
         
                 
