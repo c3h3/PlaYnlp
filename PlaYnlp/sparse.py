@@ -377,6 +377,8 @@ class SparseDataFrame(dict):
     
     def extend_zeros_cols(self, sdf):
         
+        #TODO: this method could be rewritten with kronecker product (try it and test the speed ...)s
+        
         sdf_diff_self_col_idx = np.setdiff1d(sdf._col_idx, self._col_idx)
         
         # subset checking: 
@@ -401,6 +403,28 @@ class SparseDataFrame(dict):
         else:
             # if it is subset, do nothing
             return self
+    
+    
+    def append_rows(self, sdf):
+        
+        ext_self = self.extend_zeros_cols(sdf=sdf)
+        
+        # init zeros appending smatrix
+        append_sdf_rows = type(sdf._smatrix)((sdf._smatrix.shape[0],ext_self._smatrix.shape[1]),
+                                             dtype=ext_self._smatrix.dtype)
+        
+        # update values to above zero smatrix
+        append_sdf_rows[:,ext_self.find_col_ptrs(sdf._col_idx)] = sdf._smatrix
+        
+        # compute appended smatrix and convert to csc
+        appended_smatrix = sp.sparse.vstack([ext_self._smatrix, append_sdf_rows]).tocsc()
+        
+        ext_row_idx = np.r_[ext_self._row_idx, sdf._row_idx]
+        
+        return type(self)(smatrix = appended_smatrix,
+                              col_idx = ext_self._col_idx,
+                              row_idx = ext_row_idx,
+                              summarizer = ext_self["summarizer"] if ext_self._has_default_summarizer else None)
     
     
     @property
