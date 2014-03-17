@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-import scipy as sp
+from scipy import sparse
 import pandas as pd
 from .dataio import write_pickle_file
 
@@ -389,7 +389,7 @@ class SparseDataFrame(dict):
             ext_zeros_cols = type(self._smatrix)((self._smatrix.shape[0],len(sdf_diff_self_col_idx)),
                                                  dtype=self._smatrix.dtype)
             
-            extended_smatrix = sp.sparse.hstack([self._smatrix, ext_zeros_cols]).tocsc()
+            extended_smatrix = sparse.hstack([self._smatrix, ext_zeros_cols]).tocsc()
             
             extended_col_idx = np.r_[self._col_idx,sdf_diff_self_col_idx]
             
@@ -417,7 +417,7 @@ class SparseDataFrame(dict):
         append_sdf_rows[:,ext_self.find_col_ptrs(sdf._col_idx)] = sdf._smatrix
         
         # compute appended smatrix and convert to csc
-        appended_smatrix = sp.sparse.vstack([ext_self._smatrix, append_sdf_rows]).tocsc()
+        appended_smatrix = sparse.vstack([ext_self._smatrix, append_sdf_rows]).tocsc()
         
         if len(np.intersect1d(ext_self._row_idx, sdf._row_idx)) > 0:
             ext_row_idx = None

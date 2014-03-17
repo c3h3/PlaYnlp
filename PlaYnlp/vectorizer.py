@@ -15,8 +15,8 @@ class SparseDocumentTermMatrix(SparseDataFrame):
         tr_sdf = SparseTermDocumentMatrix(smatrix = self._sdtm.T,
                                           row_idx = self._term_idx,
                                           col_idx = self._doc_idx,
-                                          summarizer = self["summarizer"] if self._has_default_summarizer else None,
-                                          vectorizer = self["summarizer"] if "vectorizer" in self.keys() else None)
+                                          summarizer = self["summarizer"] if self._has_default_summarizer else None)#,
+#                                          vectorizer = self["vectorizer"] if "vectorizer" in self.keys() else None)
         return tr_sdf
     
     
@@ -33,8 +33,8 @@ class SparseTermDocumentMatrix(SparseDataFrame):
         tr_sdf = SparseDocumentTermMatrix(smatrix = self._stdm.T,
                                           col_idx = self._term_idx,
                                           row_idx = self._doc_idx,
-                                          summarizer = self["summarizer"] if self._has_default_summarizer else None,
-                                          vectorizer = self["summarizer"] if "vectorizer" in self.keys() else None)
+                                          summarizer = self["summarizer"] if self._has_default_summarizer else None)#,
+#                                          vectorizer = self["vectorizer"] if "vectorizer" in self.keys() else None)
         return tr_sdf
     
 
