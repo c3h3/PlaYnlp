@@ -434,6 +434,8 @@ class SparseDataFrame(dict):
                                     
         appended_smatrix = ext_self._smatrix
         
+        ext_row_idx = ext_self._row_idx, 
+        
         # if has sdf only rows ... append them ... 
         if len(sdf_only_row_idx) > 0:
             # init zeros appending smatrix for appending sdf only rows
@@ -446,8 +448,8 @@ class SparseDataFrame(dict):
             # compute appended smatrix and convert to csc
             appended_smatrix = sparse.vstack([appended_smatrix, append_sdf_rows]).tocsc()
                         
-            ext_row_idx = np.r_[ext_self._row_idx, 
-                                sdf.select_rows(sdf.find_row_ptrs(sdf_only_row_idx))._row_idx]
+            ext_row_idx = np.r_[ext_row_idx, 
+                                sdf.select_rows(sdf.find_row_ptrs(sdf_only_row_idx))._row_idx].T[0]
             
             
         if len(intersection_row_idx) > 0:
@@ -461,7 +463,7 @@ class SparseDataFrame(dict):
                 appended_smatrix = sparse.vstack([appended_smatrix, force_append_sdf_rows]).tocsc()
                         
                 ext_row_idx = np.r_[ext_row_idx, 
-                                    sdf.select_rows(sdf.find_row_ptrs(intersection_row_idx))._row_idx]
+                                    sdf.select_rows(sdf.find_row_ptrs(intersection_row_idx))._row_idx].T[0]
             
             elif method == "keep":
                 pass
