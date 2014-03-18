@@ -412,7 +412,7 @@ class SparseDataFrame(dict):
             return self
     
     
-    def append_rows(self, sdf, method="force_append"):
+    def append_rows(self, sdf, method="keep"):
         """
         method in ("force_append","keep","replace","sum","mean")
         
@@ -423,11 +423,13 @@ class SparseDataFrame(dict):
         [TODO] method == "mean" means if self and sdf have same idx rows, it will replace the rows as mean of sdf and self
         """
         
+        assert method in ("force_append","keep","replace","sum",)
+        
         ext_self = self.extend_zeros_cols(sdf=sdf)
         
         # separate row_idx into three parts:
         intersection_row_idx = np.intersect1d(self._row_idx,sdf._row_idx)
-        self_only_row_idx = np.setdiff1d(self._row_idx,intersection_row_idx)
+        #self_only_row_idx = np.setdiff1d(self._row_idx,intersection_row_idx)
         sdf_only_row_idx = np.setdiff1d(sdf._row_idx,intersection_row_idx)
                                     
         
@@ -453,7 +455,7 @@ class SparseDataFrame(dict):
                 force_append_sdf_rows = type(sdf._smatrix)((len(intersection_row_idx) ,ext_self._smatrix.shape[1]),
                                                            dtype=ext_self._smatrix.dtype)
                 
-                force_append_sdf_rows[:,ext_self.find_col_ptrs(intersection_row_idx)] = sdf.select_rows(sdf.find_row_ptrs(intersection_row_idx))._smatrix
+                force_append_sdf_rows[:,ext_self.find_col_ptrs(sdf._col_idx)] = sdf.select_rows(sdf.find_row_ptrs(intersection_row_idx))._smatrix
                 
                 appended_smatrix = sparse.vstack([appended_smatrix, force_append_sdf_rows]).tocsc()
                         
@@ -464,16 +466,26 @@ class SparseDataFrame(dict):
                 pass
             
             elif method == "replace":
-                _replace_rptrs = ext_self.find_row_ptrs(intersection_row_idx)
-                _replace_cptrs = ext_self.find_col_ptrs(sdf._col_idx)
                 
-                appended_smatrix[_replace_rptrs,_replace_cptrs] = sdf.select_rows(sdf.find_row_ptrs(intersection_row_idx))._smatrix
+                replace_sdf_rows = type(sdf._smatrix)((len(intersection_row_idx) ,ext_self._smatrix.shape[1]),
+                                                      dtype=ext_self._smatrix.dtype)
+                
+                replace_sdf_rows[:,ext_self.find_col_ptrs(sdf._col_idx)] = sdf.select_rows(sdf.find_row_ptrs(intersection_row_idx))._smatrix
+                
+                _replace_rptrs = ext_self.find_row_ptrs(intersection_row_idx)
+                                
+                appended_smatrix[_replace_rptrs,:] = replace_sdf_rows
+                
             
             elif method == "sum":
-                _sum_rptrs = ext_self.find_row_ptrs(intersection_row_idx)
-                _sum_cptrs = ext_self.find_col_ptrs(sdf._col_idx)
+                sum_sdf_rows = type(sdf._smatrix)((len(intersection_row_idx) ,ext_self._smatrix.shape[1]),
+                                                    dtype=ext_self._smatrix.dtype)
                 
-                appended_smatrix[_sum_rptrs,_sum_cptrs] = appended_smatrix[_sum_rptrs,_sum_cptrs] + sdf.select_rows(sdf.find_row_ptrs(intersection_row_idx))._smatrix    
+                sum_sdf_rows[:,ext_self.find_col_ptrs(sdf._col_idx)] = sdf.select_rows(sdf.find_row_ptrs(intersection_row_idx))._smatrix
+                
+                _sum_rptrs = ext_self.find_row_ptrs(intersection_row_idx)
+                                
+                appended_smatrix[_sum_rptrs,:] = appended_smatrix[_sum_rptrs,:] + sum_sdf_rows    
                     
             elif method == "mean":
                 #TODO: method == "mean"
