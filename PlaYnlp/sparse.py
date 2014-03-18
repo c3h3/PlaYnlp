@@ -373,6 +373,13 @@ class SparseDataFrame(dict):
         assert len(np.setdiff1d(finding_idx,self._col_idx)) == 0
         
         return np.r_[map(lambda xx:np.nonzero(self._col_idx == xx)[0],finding_idx)].T[0]
+    
+    def find_row_ptrs(self, finding_idx):
+        
+        # check finding_idx is subset of self._row_idx
+        assert len(np.setdiff1d(finding_idx,self._row_idx)) == 0
+        
+        return np.r_[map(lambda xx:np.nonzero(self._row_idx == xx)[0],finding_idx)].T[0]
         
     
     def extend_zeros_cols(self, sdf):
@@ -405,24 +412,40 @@ class SparseDataFrame(dict):
             return self
     
     
-    def append_rows(self, sdf):
+    def append_rows(self, sdf, method="force_append"):
+        """
+        method in ("force_append","keep","replace","sum","mean")
+        
+        method == "force_append" means it will append all rows in sdf as new rows in self
+        method == "keep" means if self and sdf have same idx rows, it will keep the rows from self
+        method == "replace" means if self and sdf have same idx rows, it will replace the rows as sum of sdf and self
+        method == "replace" means if self and sdf have same idx rows, it will replace the rows as mean of sdf and self
+        """
         
         ext_self = self.extend_zeros_cols(sdf=sdf)
         
-        # init zeros appending smatrix
-        append_sdf_rows = type(sdf._smatrix)((sdf._smatrix.shape[0],ext_self._smatrix.shape[1]),
-                                             dtype=ext_self._smatrix.dtype)
+        # separate row_idx into three parts:
+        intersection_row_idx = np.intersect1d(self._row_idx,sdf._row_idx)
+        self_only_row_idx = np.setdiff1d(self._row_idx,intersection_row_idx)
+        sdf_only_row_idx = np.setdiff1d(sdf._row_idx,intersection_row_idx)
+                                    
         
-        # update values to above zero smatrix
-        append_sdf_rows[:,ext_self.find_col_ptrs(sdf._col_idx)] = sdf._smatrix
-        
-        # compute appended smatrix and convert to csc
-        appended_smatrix = sparse.vstack([ext_self._smatrix, append_sdf_rows]).tocsc()
-        
-        if len(np.intersect1d(ext_self._row_idx, sdf._row_idx)) > 0:
-            ext_row_idx = None
-        else:
-            ext_row_idx = np.r_[ext_self._row_idx, sdf._row_idx]
+        # if has sdf only rows ... append them ... 
+        if len(sdf_only_row_idx) > 0:
+            # init zeros appending smatrix for appending sdf only rows
+            append_sdf_rows = type(sdf._smatrix)((len(sdf_only_row_idx) + len(self_only_row_idx),ext_self._smatrix.shape[1]),
+                                                 dtype=ext_self._smatrix.dtype)
+            
+            # update values to above zero smatrix
+            append_sdf_rows[:,ext_self.find_col_ptrs(sdf._col_idx)] = sdf.select_rows(sdf_only_row_idx)._smatrix
+            
+            # compute appended smatrix and convert to csc
+            appended_smatrix = sparse.vstack([ext_self._smatrix, append_sdf_rows]).tocsc()
+            
+            if len(np.intersect1d(ext_self._row_idx, sdf._row_idx)) > 0:
+                ext_row_idx = None
+            else:
+                ext_row_idx = np.r_[ext_self._row_idx, sdf._row_idx]
             
         
         return type(self)(smatrix = appended_smatrix,
