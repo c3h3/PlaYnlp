@@ -418,8 +418,9 @@ class SparseDataFrame(dict):
         
         method == "force_append" means it will append all rows in sdf as new rows in self
         method == "keep" means if self and sdf have same idx rows, it will keep the rows from self
-        method == "replace" means if self and sdf have same idx rows, it will replace the rows as sum of sdf and self
-        method == "replace" means if self and sdf have same idx rows, it will replace the rows as mean of sdf and self
+        method == "replace" means if self and sdf have same idx rows, it will replace with sdf's rows
+        method == "sum" means if self and sdf have same idx rows, it will replace the rows as sum of sdf and self
+        [TODO] method == "mean" means if self and sdf have same idx rows, it will replace the rows as mean of sdf and self
         """
         
         ext_self = self.extend_zeros_cols(sdf=sdf)
@@ -433,19 +434,51 @@ class SparseDataFrame(dict):
         # if has sdf only rows ... append them ... 
         if len(sdf_only_row_idx) > 0:
             # init zeros appending smatrix for appending sdf only rows
-            append_sdf_rows = type(sdf._smatrix)((len(sdf_only_row_idx) + len(self_only_row_idx),ext_self._smatrix.shape[1]),
+            append_sdf_rows = type(sdf._smatrix)((len(sdf_only_row_idx) ,ext_self._smatrix.shape[1]),
                                                  dtype=ext_self._smatrix.dtype)
             
             # update values to above zero smatrix
-            append_sdf_rows[:,ext_self.find_col_ptrs(sdf._col_idx)] = sdf.select_rows(sdf_only_row_idx)._smatrix
+            append_sdf_rows[:,ext_self.find_col_ptrs(sdf._col_idx)] = sdf.select_rows(sdf.find_row_ptrs(sdf_only_row_idx))._smatrix
             
             # compute appended smatrix and convert to csc
             appended_smatrix = sparse.vstack([ext_self._smatrix, append_sdf_rows]).tocsc()
+                        
+            ext_row_idx = np.r_[ext_self._row_idx, 
+                                sdf.select_rows(sdf.find_row_ptrs(sdf_only_row_idx))._row_idx]
             
-            if len(np.intersect1d(ext_self._row_idx, sdf._row_idx)) > 0:
-                ext_row_idx = None
-            else:
-                ext_row_idx = np.r_[ext_self._row_idx, sdf._row_idx]
+            
+        if len(intersection_row_idx) > 0:
+            
+            if method == "force_append":
+                force_append_sdf_rows = type(sdf._smatrix)((len(intersection_row_idx) ,ext_self._smatrix.shape[1]),
+                                                           dtype=ext_self._smatrix.dtype)
+                
+                force_append_sdf_rows[:,ext_self.find_col_ptrs(intersection_row_idx)] = sdf.select_rows(sdf.find_row_ptrs(intersection_row_idx))._smatrix
+                
+                appended_smatrix = sparse.vstack([appended_smatrix, force_append_sdf_rows]).tocsc()
+                        
+                ext_row_idx = np.r_[ext_row_idx, 
+                                    sdf.select_rows(sdf.find_row_ptrs(intersection_row_idx))._row_idx]
+            
+            elif method == "keep":
+                pass
+            
+            elif method == "replace":
+                _replace_rptrs = ext_self.find_row_ptrs(intersection_row_idx)
+                _replace_cptrs = ext_self.find_col_ptrs(sdf._col_idx)
+                
+                appended_smatrix[_replace_rptrs,_replace_cptrs] = sdf.select_rows(sdf.find_row_ptrs(intersection_row_idx))._smatrix
+            
+            elif method == "sum":
+                _sum_rptrs = ext_self.find_row_ptrs(intersection_row_idx)
+                _sum_cptrs = ext_self.find_col_ptrs(sdf._col_idx)
+                
+                appended_smatrix[_sum_rptrs,_sum_cptrs] = appended_smatrix[_sum_rptrs,_sum_cptrs] + sdf.select_rows(sdf.find_row_ptrs(intersection_row_idx))._smatrix    
+                    
+            elif method == "mean":
+                #TODO: method == "mean"
+                pass
+                
             
         
         return type(self)(smatrix = appended_smatrix,
