@@ -15,6 +15,21 @@ def L0_norm_col_summarizer(xx):
     return xx.sign().sum(axis=0)
     
 
+def gen_ptrs_idx(idx, idx_dtype=None):
+    if idx_dtype == None:
+        dt = np.dtype([("ptr",np.int64),("idx",idx.dtype)])
+    else:
+        dt = np.dtype([("ptr",np.int64),("idx",idx_dtype)])
+    ptrs_idx = np.array(zip(np.arange(len(idx),dtype=np.int64),idx),dtype=dt)
+    return ptrs_idx
+
+def ptrs_idx_projection(ptrs_idx, proj_idx):
+    return ptrs_idx[np.in1d(ptrs_idx["idx"],proj_idx)]
+    
+def sort_by_idx(ptrs_idx):
+    return np.sort(ptrs_idx, order=["idx"])
+    
+
 
 class SparseDataFrameSummary(dict):
     _key_mapper = {"data":"summary_data",
@@ -410,9 +425,9 @@ class SparseDataFrame(dict):
         else:
             # if it is subset, do nothing
             return self
-    
-    
-    def append_rows(self, sdf, method="keep"):
+        
+        
+    def _append_rows(self, sdf, method="keep"):
         """
         method in ("force_append","keep","replace","sum","mean")
         
@@ -497,10 +512,312 @@ class SparseDataFrame(dict):
             
         
         return type(self)(smatrix = appended_smatrix,
-                              col_idx = ext_self._col_idx,
-                              row_idx = ext_row_idx,
-                              summarizer = ext_self["summarizer"] if ext_self._has_default_summarizer else None)
+                          col_idx = ext_self._col_idx,
+                          row_idx = ext_row_idx,
+                          summarizer = ext_self["summarizer"] if ext_self._has_default_summarizer else None)
     
+    
+    
+    def _merge_sdf(self, sdf, method="replace"):
+        """
+        method in ("force_append","keep","replace","sum","mean")
+        
+        [TODO] method == "force_append" means it will append all rows in sdf as new rows in self
+        method == "keep" means if self and sdf have same idx rows, it will keep the rows from self
+        method == "replace" means if self and sdf have same idx rows, it will replace with sdf's rows
+        method == "sum" means if self and sdf have same idx rows, it will replace the rows as sum of sdf and self
+        [TODO] method == "mean" means if self and sdf have same idx rows, it will replace the rows as mean of sdf and self
+        """
+
+        assert method in ("keep","replace","sum",)
+        
+        print "self._col_idx = ",self._col_idx.shape
+        print "sdf._col_idx = ",sdf._col_idx.shape
+        print "self._row_idx = ",self._row_idx.shape
+        print "sdf._row_idx = ",sdf._row_idx.shape
+        
+        _union_idx = np.r_[self._col_idx,sdf._col_idx]
+        self_col_ptrs_idx = gen_ptrs_idx(self._col_idx, _union_idx.dtype)
+        sdf_col_ptrs_idx = gen_ptrs_idx(sdf._col_idx, _union_idx.dtype)
+        
+        _union_idx = np.r_[self._row_idx,sdf._row_idx]
+        self_row_ptrs_idx = gen_ptrs_idx(self._row_idx, _union_idx.dtype)
+        sdf_row_ptrs_idx = gen_ptrs_idx(sdf._row_idx, _union_idx.dtype)
+        
+        
+        inter_col_idx = np.intersect1d(self_col_ptrs_idx["idx"],sdf_col_ptrs_idx["idx"])
+        inter_row_idx = np.intersect1d(self_row_ptrs_idx["idx"],sdf_row_ptrs_idx["idx"])
+
+        
+        self_inter_col_ptrs_idx = sort_by_idx(ptrs_idx_projection(self_col_ptrs_idx,inter_col_idx))
+        sdf_inter_col_ptrs_idx = sort_by_idx(ptrs_idx_projection(sdf_col_ptrs_idx,inter_col_idx))
+
+        self_inter_row_ptrs_idx = sort_by_idx(ptrs_idx_projection(self_row_ptrs_idx,inter_row_idx))
+        sdf_inter_row_ptrs_idx = sort_by_idx(ptrs_idx_projection(sdf_row_ptrs_idx,inter_row_idx))
+        
+#        print self_inter_col_ptrs_idx["ptr"]
+#        print sdf_inter_col_ptrs_idx["ptr"]
+#        
+#        print self_inter_col_ptrs_idx["idx"]
+#        print sdf_inter_col_ptrs_idx["idx"]
+#        
+#        print self_inter_row_ptrs_idx["ptr"]
+#        print sdf_inter_row_ptrs_idx["ptr"]
+#
+#        print self_inter_row_ptrs_idx["idx"]
+#        print sdf_inter_row_ptrs_idx["idx"]
+        
+        print "~~~~~~~~~~~~~~~~~~"
+        print self_col_ptrs_idx.shape
+        print self_inter_col_ptrs_idx.shape
+        
+        self_only_col_ptrs_idx = np.setdiff1d(self_col_ptrs_idx,self_inter_col_ptrs_idx)
+        print self_only_col_ptrs_idx.shape
+        
+        print "~~~~~~~~~~~~~~~~~~"
+        
+        print self_row_ptrs_idx.shape
+        print self_inter_row_ptrs_idx.shape
+        
+        self_only_row_ptrs_idx = np.setdiff1d(self_row_ptrs_idx,self_inter_row_ptrs_idx)
+        print self_only_row_ptrs_idx.shape
+        
+        print "~~~~~~~~~~~~~~~~~~"
+        print sdf_col_ptrs_idx.shape
+        print sdf_inter_col_ptrs_idx.shape
+        
+        sdf_only_col_ptrs_idx = np.setdiff1d(sdf_col_ptrs_idx,sdf_inter_col_ptrs_idx)
+        print sdf_only_col_ptrs_idx.shape
+        
+        print "~~~~~~~~~~~~~~~~~~"
+        
+        
+        print sdf_row_ptrs_idx.shape
+        print sdf_inter_row_ptrs_idx.shape
+        
+        sdf_only_row_ptrs_idx = np.setdiff1d(sdf_row_ptrs_idx,sdf_inter_row_ptrs_idx)
+        print sdf_only_row_ptrs_idx.shape
+        
+        print "~~~~~~~~~~~~~~~~~~"
+        
+        
+        return self_col_ptrs_idx,sdf_col_ptrs_idx,self_row_ptrs_idx,sdf_row_ptrs_idx,self_inter_col_ptrs_idx,sdf_inter_col_ptrs_idx,self_inter_row_ptrs_idx,sdf_inter_row_ptrs_idx
+        
+#        if method in ("keep","replace","sum"):
+#            
+#            # (row_idx oin 1, row_idx bin 1 and 2, row_idx oin 2) x (col_idx oin 1, col_idx bin 1 and 2, col_idx oin 2)
+#            
+#            output_smatrix_shape = (self_only_row_ptrs_idx.shape[0] + self_inter_row_ptrs_idx.shape[0] + sdf_only_row_ptrs_idx.shape[0],
+#                                    self_only_col_ptrs_idx.shape[0] + self_inter_col_ptrs_idx.shape[0] + sdf_only_col_ptrs_idx.shape[0])
+#            
+#            output_smatrix = type(self._smatrix)(output_smatrix_shape,dtype=self._smatrix.dtype)
+#            
+#            output_smatrix_row_oin_1_idx  = np.arange(self_only_row_ptrs_idx.shape[0])
+#            output_smatrix_row_bin_12_idx  = np.arange(self_only_row_ptrs_idx.shape[0],self_only_row_ptrs_idx.shape[0]+self_inter_row_ptrs_idx.shape[0])
+#            output_smatrix_row_oin_2_idx  = np.arange(self_only_row_ptrs_idx.shape[0]+self_inter_row_ptrs_idx.shape[0],self_only_row_ptrs_idx.shape[0]+self_inter_row_ptrs_idx.shape[0]+sdf_only_row_ptrs_idx.shape[0])
+#            
+#            print "output_smatrix_row_oin_1_idx = ",output_smatrix_row_oin_1_idx
+#            print "output_smatrix_row_bin_12_idx = ",output_smatrix_row_bin_12_idx
+#            print "output_smatrix_row_oin_2_idx = ",output_smatrix_row_oin_2_idx
+#
+#            output_smatrix_col_oin_1_idx  = np.arange(self_only_col_ptrs_idx.shape[0])
+#            output_smatrix_col_bin_12_idx  = np.arange(self_only_col_ptrs_idx.shape[0],self_only_col_ptrs_idx.shape[0]+self_inter_col_ptrs_idx.shape[0])
+#            output_smatrix_col_oin_2_idx  = np.arange(self_only_col_ptrs_idx.shape[0]+self_inter_col_ptrs_idx.shape[0],self_only_col_ptrs_idx.shape[0]+self_inter_col_ptrs_idx.shape[0]+sdf_only_col_ptrs_idx.shape[0])
+#            
+#            print "output_smatrix_col_oin_1_idx = ",output_smatrix_col_oin_1_idx
+#            print "output_smatrix_col_bin_12_idx = ",output_smatrix_col_bin_12_idx
+#            print "output_smatrix_col_oin_2_idx = ",output_smatrix_col_oin_2_idx
+#            
+#            #########################################################
+#            
+#            # row_idx oin 1 x col_idx oin 1
+#            print (len(output_smatrix_row_oin_1_idx),len(output_smatrix_col_oin_1_idx))
+#            print self._smatrix[self_only_row_ptrs_idx["ptr"],:][:,self_only_col_ptrs_idx["ptr"]].shape
+#            output_smatrix[(output_smatrix_row_oin_1_idx,output_smatrix_col_oin_1_idx)] = self._smatrix[self_only_row_ptrs_idx["ptr"],:][:,self_only_col_ptrs_idx["ptr"]]
+#            
+#            # row_idx oin 1 x col_idx bin 1 and 2
+#            output_smatrix[(output_smatrix_row_oin_1_idx,output_smatrix_col_bin_12_idx)] = self._smatrix[self_only_row_ptrs_idx["ptr"],:][:,self_inter_col_ptrs_idx["ptr"]]
+#            
+#            # row_idx oin 1 x col_idx oin 2 (default 0)
+#            #output_smatrix[0:self_only_row_ptrs_idx.shape[0],(self_only_col_ptrs_idx.shape[0]+self_inter_col_ptrs_idx.shape[0]):(self_only_col_ptrs_idx.shape[0]+self_inter_col_ptrs_idx.shape[0]+sdf_only_col_ptrs_idx.shape[0])] = 0
+#            
+#            
+#            #########################################################
+#            
+#            # row_idx bin 1 and 2 x col_idx oin 1
+#            output_smatrix[(output_smatrix_row_bin_12_idx,output_smatrix_col_oin_1_idx)] = self._smatrix[self_inter_row_ptrs_idx["ptr"],:][:,self_only_col_ptrs_idx["ptr"]]
+#            
+#            # row_idx bin 1 and 2  x col_idx bin 1 and 2
+#            if method == "replace":
+#                output_smatrix[(output_smatrix_row_bin_12_idx,output_smatrix_col_bin_12_idx)] = sdf._smatrix[sdf_inter_row_ptrs_idx["ptr"],:][:,sdf_inter_col_ptrs_idx["ptr"]]
+#                
+#            elif method == "keep":
+#                output_smatrix[(output_smatrix_row_bin_12_idx,output_smatrix_col_bin_12_idx)] = self._smatrix[self_inter_row_ptrs_idx["ptr"],:][:,self_inter_col_ptrs_idx["ptr"]]
+#            
+#            elif method == "sum":
+#                output_smatrix[(output_smatrix_row_bin_12_idx,output_smatrix_col_bin_12_idx)] = self._smatrix[(self_inter_row_ptrs_idx["ptr"],self_inter_col_ptrs_idx["ptr"])] + sdf._smatrix[(sdf_inter_row_ptrs_idx["ptr"],sdf_inter_col_ptrs_idx["ptr"])]
+#                
+#            
+#            # row_idx bin 1 and 2  x col_idx oin 2
+#            output_smatrix[(output_smatrix_row_bin_12_idx,output_smatrix_col_oin_2_idx)] = sdf._smatrix[sdf_inter_row_ptrs_idx["ptr"],:][:,sdf_only_col_ptrs_idx["ptr"]]
+#            
+#            #########################################################
+#            
+#            # crow_idx oin 2 x col_idx oin 1 (default 0)
+#            #output_smatrix[(output_smatrix_row_oin_2_idx,output_smatrix_col_oin_2_idx)] = 0
+#            
+#            # crow_idx oin 2 x col_idx bin 1 and 2
+#            output_smatrix[(output_smatrix_row_oin_2_idx,output_smatrix_col_bin_12_idx)] = sdf._smatrix[sdf_only_row_ptrs_idx["ptr"],:][:,sdf_inter_col_ptrs_idx["ptr"]]
+#            
+#            # crow_idx oin 2 x col_idx oin 1 (default 0)
+#            output_smatrix[(output_smatrix_row_oin_2_idx,output_smatrix_col_oin_2_idx)] = sdf._smatrix[sdf_only_row_ptrs_idx["ptr"],:][:,sdf_only_col_ptrs_idx["ptr"]]
+#
+#            #########################################################
+#        
+#        output_smatrix_col_idx = np.r_[self_only_col_ptrs_idx["idx"],self_inter_col_ptrs_idx["idx"],sdf_only_col_ptrs_idx["idx"]]
+#        output_smatrix_row_idx = np.r_[self_only_row_ptrs_idx["idx"],self_inter_row_ptrs_idx["idx"],sdf_only_row_ptrs_idx["idx"]]
+#        
+#        
+#        
+#        
+#        
+#        return type(self)(smatrix = output_smatrix,
+#                          col_idx = output_smatrix_col_idx,
+#                          row_idx = output_smatrix_row_idx,
+#                          summarizer = self["summarizer"] if self._has_default_summarizer else None)
+#        
+##        type(sdf._smatrix)((len(intersection_row_idx) ,ext_self._smatrix.shape[1]),
+##                                                      dtype=ext_self._smatrix.dtype)
+#        
+#        
+        
+    
+    def merge_sdf(self, sdf, method="replace"):
+        """
+        method in ("force_append","keep","replace","sum","mean")
+        
+        [TODO] method == "force_append" means it will append all rows in sdf as new rows in self
+        method == "keep" means if self and sdf have same idx rows, it will keep the rows from self
+        method == "replace" means if self and sdf have same idx rows, it will replace with sdf's rows
+        method == "sum" means if self and sdf have same idx rows, it will replace the rows as sum of sdf and self
+        method == "mean" means if self and sdf have same idx rows, it will replace the rows as mean of sdf and self
+        """
+
+        assert method in ("keep","replace","sum","mean")
+        
+        
+        self_ext_cols = self.extend_zeros_cols(sdf)
+        sdf_ext_cols = sdf.extend_zeros_cols(self)
+        
+        _union_idx = np.r_[self_ext_cols._col_idx,sdf_ext_cols._col_idx]
+        self_col_ptrs_idx = gen_ptrs_idx(self_ext_cols._col_idx, _union_idx.dtype)
+        sdf_col_ptrs_idx = gen_ptrs_idx(sdf_ext_cols._col_idx, _union_idx.dtype)
+                
+        _union_idx = np.r_[self_ext_cols._row_idx,sdf_ext_cols._row_idx]
+        self_row_ptrs_idx = gen_ptrs_idx(self_ext_cols._row_idx, _union_idx.dtype)
+        sdf_row_ptrs_idx = gen_ptrs_idx(sdf_ext_cols._row_idx, _union_idx.dtype)
+                
+                
+        inter_col_idx = np.intersect1d(self_col_ptrs_idx["idx"],sdf_col_ptrs_idx["idx"])
+        inter_row_idx = np.intersect1d(self_row_ptrs_idx["idx"],sdf_row_ptrs_idx["idx"])
+        
+                
+        self_inter_col_ptrs_idx = sort_by_idx(ptrs_idx_projection(self_col_ptrs_idx,inter_col_idx))
+        sdf_inter_col_ptrs_idx = sort_by_idx(ptrs_idx_projection(sdf_col_ptrs_idx,inter_col_idx))
+        
+        self_inter_row_ptrs_idx = sort_by_idx(ptrs_idx_projection(self_row_ptrs_idx,inter_row_idx))
+        sdf_inter_row_ptrs_idx = sort_by_idx(ptrs_idx_projection(sdf_row_ptrs_idx,inter_row_idx))
+        
+        
+        self_only_row_ptrs_idx = np.setdiff1d(self_row_ptrs_idx,self_inter_row_ptrs_idx)
+        sdf_only_row_ptrs_idx = np.setdiff1d(sdf_row_ptrs_idx,sdf_inter_row_ptrs_idx)
+        
+        
+        self_ext_cols_smatrix = self_ext_cols._smatrix[:,self_inter_col_ptrs_idx["ptr"]]
+        sdf_ext_cols_smatrix = sdf_ext_cols._smatrix[:,sdf_inter_col_ptrs_idx["ptr"]]
+                
+        if method in ("keep","replace","sum","mean"):
+            if method == "keep": 
+#                print 'self_only_row_ptrs_idx["idx"] = ',self_only_row_ptrs_idx["idx"]
+#                print 'self_inter_row_ptrs_idx["idx"] = ',self_inter_row_ptrs_idx["idx"]
+#                print 'sdf_only_row_ptrs_idx["idx"] = ',sdf_only_row_ptrs_idx["idx"]
+                                                                                                      
+                if self_inter_row_ptrs_idx["ptr"].size > 0:
+                    new_smatrix = sparse.vstack([self_ext_cols_smatrix[self_only_row_ptrs_idx["ptr"],:],
+                                                 self_ext_cols_smatrix[self_inter_row_ptrs_idx["ptr"],:],
+                                                 sdf_ext_cols_smatrix[sdf_only_row_ptrs_idx["ptr"],:]]).tocsc()
+                
+                    new_col_idx = self_inter_col_ptrs_idx["idx"]
+                    new_row_idx = np.r_[self_only_row_ptrs_idx["idx"],
+                                        self_inter_row_ptrs_idx["idx"],
+                                        sdf_only_row_ptrs_idx["idx"]]
+                else:
+                    new_smatrix = sparse.vstack([self_ext_cols_smatrix[self_only_row_ptrs_idx["ptr"],:],
+                                                 sdf_ext_cols_smatrix[sdf_only_row_ptrs_idx["ptr"],:]]).tocsc()
+                
+                    new_col_idx = self_inter_col_ptrs_idx["idx"]
+                    new_row_idx = np.r_[self_only_row_ptrs_idx["idx"],
+                                        sdf_only_row_ptrs_idx["idx"]]
+                    
+            elif method == "replace":
+                if self_inter_row_ptrs_idx["ptr"].size > 0:
+                    new_smatrix = sparse.vstack([self_ext_cols_smatrix[self_only_row_ptrs_idx["ptr"],:],
+                                                 sdf_ext_cols_smatrix[sdf_inter_row_ptrs_idx["ptr"],:],
+                                                 sdf_ext_cols_smatrix[sdf_only_row_ptrs_idx["ptr"],:]]).tocsc()
+                
+                    new_col_idx = self_inter_col_ptrs_idx["idx"]
+                    new_row_idx = np.r_[self_only_row_ptrs_idx["idx"],
+                                        sdf_inter_row_ptrs_idx["idx"],
+                                        sdf_only_row_ptrs_idx["idx"]]
+                else:
+                    new_smatrix = sparse.vstack([self_ext_cols_smatrix[self_only_row_ptrs_idx["ptr"],:],
+                                                 sdf_ext_cols_smatrix[sdf_only_row_ptrs_idx["ptr"],:]]).tocsc()
+                
+                    new_col_idx = self_inter_col_ptrs_idx["idx"]
+                    new_row_idx = np.r_[self_only_row_ptrs_idx["idx"],
+                                        sdf_only_row_ptrs_idx["idx"]]
+                    
+            elif method == "sum":
+                if self_inter_row_ptrs_idx["ptr"].size > 0:
+                    new_smatrix = sparse.vstack([self_ext_cols_smatrix[self_only_row_ptrs_idx["ptr"],:],
+                                                 sdf_ext_cols_smatrix[sdf_inter_row_ptrs_idx["ptr"],:]+self_ext_cols_smatrix[self_inter_row_ptrs_idx["ptr"],:],
+                                                 sdf_ext_cols_smatrix[sdf_only_row_ptrs_idx["ptr"],:]]).tocsc()
+                
+                    new_col_idx = self_inter_col_ptrs_idx["idx"]
+                    new_row_idx = np.r_[self_only_row_ptrs_idx["idx"],
+                                        sdf_inter_row_ptrs_idx["idx"],
+                                        sdf_only_row_ptrs_idx["idx"]]
+                else:
+                    new_smatrix = sparse.vstack([self_ext_cols_smatrix[self_only_row_ptrs_idx["ptr"],:],
+                                                 sdf_ext_cols_smatrix[sdf_only_row_ptrs_idx["ptr"],:]]).tocsc()
+                
+                    new_col_idx = self_inter_col_ptrs_idx["idx"]
+                    new_row_idx = np.r_[self_only_row_ptrs_idx["idx"],
+                                        sdf_only_row_ptrs_idx["idx"]]
+                    
+            elif method == "mean":
+                if self_inter_row_ptrs_idx["ptr"].size > 0:
+                    new_smatrix = sparse.vstack([self_ext_cols_smatrix[self_only_row_ptrs_idx["ptr"],:],
+                                                 (sdf_ext_cols_smatrix[sdf_inter_row_ptrs_idx["ptr"],:]+self_ext_cols_smatrix[self_inter_row_ptrs_idx["ptr"],:])/2.0,
+                                                 sdf_ext_cols_smatrix[sdf_only_row_ptrs_idx["ptr"],:]]).tocsc()
+                
+                    new_col_idx = self_inter_col_ptrs_idx["idx"]
+                    new_row_idx = np.r_[self_only_row_ptrs_idx["idx"],
+                                        sdf_inter_row_ptrs_idx["idx"],
+                                        sdf_only_row_ptrs_idx["idx"]]
+                else:
+                    new_smatrix = sparse.vstack([self_ext_cols_smatrix[self_only_row_ptrs_idx["ptr"],:],
+                                                 sdf_ext_cols_smatrix[sdf_only_row_ptrs_idx["ptr"],:]]).tocsc()
+                
+                    new_col_idx = self_inter_col_ptrs_idx["idx"]
+                    new_row_idx = np.r_[self_only_row_ptrs_idx["idx"],
+                                        sdf_only_row_ptrs_idx["idx"]]
+        
+        return type(self)(smatrix = new_smatrix,
+                          col_idx = new_col_idx,
+                          row_idx = new_row_idx,
+                          summarizer = self["summarizer"] if self._has_default_summarizer else None)
+                                             
     
     @property
     def to_pandas_df(self):
