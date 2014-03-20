@@ -1,5 +1,9 @@
 
-import pickle
+try:
+    import cPickle as pickle
+except:
+    import pickle
+
 
 
 def write_pickle_file(obj, write_file, write_file_prefix=None, close_after_write=True):
