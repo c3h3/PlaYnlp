@@ -476,77 +476,110 @@ class SparseDataFrame(dict):
 #                print 'self_only_row_ptrs_idx["idx"] = ',self_only_row_ptrs_idx["idx"]
 #                print 'self_inter_row_ptrs_idx["idx"] = ',self_inter_row_ptrs_idx["idx"]
 #                print 'sdf_only_row_ptrs_idx["idx"] = ',sdf_only_row_ptrs_idx["idx"]
-                                                                                                      
+                
+                vstack_smatrix = [self_ext_cols_smatrix[self_only_row_ptrs_idx["ptr"],:]]
+                new_row_idx = self_only_row_ptrs_idx["idx"]
+                
+            
                 if self_inter_row_ptrs_idx["ptr"].size > 0:
-                    new_smatrix = sparse.vstack([self_ext_cols_smatrix[self_only_row_ptrs_idx["ptr"],:],
-                                                 self_ext_cols_smatrix[self_inter_row_ptrs_idx["ptr"],:],
-                                                 sdf_ext_cols_smatrix[sdf_only_row_ptrs_idx["ptr"],:]]).tocsc()
+                    
+                    vstack_smatrix.append(self_ext_cols_smatrix[self_inter_row_ptrs_idx["ptr"],:])
+                    
+                    new_row_idx = np.r_[new_row_idx,
+                                        self_inter_row_ptrs_idx["idx"]]
                 
-                    new_col_idx = self_inter_col_ptrs_idx["idx"]
-                    new_row_idx = np.r_[self_only_row_ptrs_idx["idx"],
-                                        self_inter_row_ptrs_idx["idx"],
-                                        sdf_only_row_ptrs_idx["idx"]]
-                else:
-                    new_smatrix = sparse.vstack([self_ext_cols_smatrix[self_only_row_ptrs_idx["ptr"],:],
-                                                 sdf_ext_cols_smatrix[sdf_only_row_ptrs_idx["ptr"],:]]).tocsc()
                 
-                    new_col_idx = self_inter_col_ptrs_idx["idx"]
-                    new_row_idx = np.r_[self_only_row_ptrs_idx["idx"],
+                if sdf_only_row_ptrs_idx["ptr"].size > 0:
+                    
+                    vstack_smatrix.append(sdf_ext_cols_smatrix[sdf_only_row_ptrs_idx["ptr"],:])
+                    
+                    new_row_idx = np.r_[new_row_idx,
                                         sdf_only_row_ptrs_idx["idx"]]
+                    
+                    
+                new_smatrix = sparse.vstack(vstack_smatrix).tocsc()
+                new_col_idx = self_inter_col_ptrs_idx["idx"]
+              
                     
             elif method == "replace":
-                if self_inter_row_ptrs_idx["ptr"].size > 0:
-                    new_smatrix = sparse.vstack([self_ext_cols_smatrix[self_only_row_ptrs_idx["ptr"],:],
-                                                 sdf_ext_cols_smatrix[sdf_inter_row_ptrs_idx["ptr"],:],
-                                                 sdf_ext_cols_smatrix[sdf_only_row_ptrs_idx["ptr"],:]]).tocsc()
                 
-                    new_col_idx = self_inter_col_ptrs_idx["idx"]
-                    new_row_idx = np.r_[self_only_row_ptrs_idx["idx"],
-                                        sdf_inter_row_ptrs_idx["idx"],
-                                        sdf_only_row_ptrs_idx["idx"]]
-                else:
-                    new_smatrix = sparse.vstack([self_ext_cols_smatrix[self_only_row_ptrs_idx["ptr"],:],
-                                                 sdf_ext_cols_smatrix[sdf_only_row_ptrs_idx["ptr"],:]]).tocsc()
+                vstack_smatrix = [self_ext_cols_smatrix[self_only_row_ptrs_idx["ptr"],:]]
+                new_row_idx = self_only_row_ptrs_idx["idx"]
                 
-                    new_col_idx = self_inter_col_ptrs_idx["idx"]
-                    new_row_idx = np.r_[self_only_row_ptrs_idx["idx"],
+            
+                if sdf_inter_row_ptrs_idx["ptr"].size > 0:
+                    
+                    vstack_smatrix.append(sdf_ext_cols_smatrix[sdf_inter_row_ptrs_idx["ptr"],:])
+                    
+                    new_row_idx = np.r_[new_row_idx,
+                                        sdf_inter_row_ptrs_idx["idx"]]
+                
+                
+                if sdf_only_row_ptrs_idx["ptr"].size > 0:
+                    
+                    vstack_smatrix.append(sdf_ext_cols_smatrix[sdf_only_row_ptrs_idx["ptr"],:])
+                    
+                    new_row_idx = np.r_[new_row_idx,
                                         sdf_only_row_ptrs_idx["idx"]]
                     
+                    
+                new_smatrix = sparse.vstack(vstack_smatrix).tocsc()
+                new_col_idx = self_inter_col_ptrs_idx["idx"]
+                
+                
+                    
             elif method == "sum":
-                if self_inter_row_ptrs_idx["ptr"].size > 0:
-                    new_smatrix = sparse.vstack([self_ext_cols_smatrix[self_only_row_ptrs_idx["ptr"],:],
-                                                 sdf_ext_cols_smatrix[sdf_inter_row_ptrs_idx["ptr"],:]+self_ext_cols_smatrix[self_inter_row_ptrs_idx["ptr"],:],
-                                                 sdf_ext_cols_smatrix[sdf_only_row_ptrs_idx["ptr"],:]]).tocsc()
                 
-                    new_col_idx = self_inter_col_ptrs_idx["idx"]
-                    new_row_idx = np.r_[self_only_row_ptrs_idx["idx"],
-                                        sdf_inter_row_ptrs_idx["idx"],
-                                        sdf_only_row_ptrs_idx["idx"]]
-                else:
-                    new_smatrix = sparse.vstack([self_ext_cols_smatrix[self_only_row_ptrs_idx["ptr"],:],
-                                                 sdf_ext_cols_smatrix[sdf_only_row_ptrs_idx["ptr"],:]]).tocsc()
+                vstack_smatrix = [self_ext_cols_smatrix[self_only_row_ptrs_idx["ptr"],:]]
+                new_row_idx = self_only_row_ptrs_idx["idx"]
                 
-                    new_col_idx = self_inter_col_ptrs_idx["idx"]
-                    new_row_idx = np.r_[self_only_row_ptrs_idx["idx"],
+            
+                if sdf_inter_row_ptrs_idx["ptr"].size > 0:
+                    
+                    vstack_smatrix.append(sdf_ext_cols_smatrix[sdf_inter_row_ptrs_idx["ptr"],:]+self_ext_cols_smatrix[self_inter_row_ptrs_idx["ptr"],:])
+                    
+                    new_row_idx = np.r_[new_row_idx,
+                                        sdf_inter_row_ptrs_idx["idx"]]
+                
+                
+                if sdf_only_row_ptrs_idx["ptr"].size > 0:
+                    
+                    vstack_smatrix.append(sdf_ext_cols_smatrix[sdf_only_row_ptrs_idx["ptr"],:])
+                    
+                    new_row_idx = np.r_[new_row_idx,
                                         sdf_only_row_ptrs_idx["idx"]]
+                    
+                    
+                new_smatrix = sparse.vstack(vstack_smatrix).tocsc()
+                new_col_idx = self_inter_col_ptrs_idx["idx"]
+                
+            
                 
             elif method == "mean":
-                if self_inter_row_ptrs_idx["ptr"].size > 0:
-                    new_smatrix = sparse.vstack([self_ext_cols_smatrix[self_only_row_ptrs_idx["ptr"],:],
-                                                 (sdf_ext_cols_smatrix[sdf_inter_row_ptrs_idx["ptr"],:]+self_ext_cols_smatrix[self_inter_row_ptrs_idx["ptr"],:])/2.0,
-                                                 sdf_ext_cols_smatrix[sdf_only_row_ptrs_idx["ptr"],:]]).tocsc()
                 
-                    new_col_idx = self_inter_col_ptrs_idx["idx"]
-                    new_row_idx = np.r_[self_only_row_ptrs_idx["idx"],
-                                        sdf_inter_row_ptrs_idx["idx"],
-                                        sdf_only_row_ptrs_idx["idx"]]
-                else:
-                    new_smatrix = sparse.vstack([self_ext_cols_smatrix[self_only_row_ptrs_idx["ptr"],:],
-                                                 sdf_ext_cols_smatrix[sdf_only_row_ptrs_idx["ptr"],:]]).tocsc()
+                vstack_smatrix = [self_ext_cols_smatrix[self_only_row_ptrs_idx["ptr"],:]]
+                new_row_idx = self_only_row_ptrs_idx["idx"]
                 
-                    new_col_idx = self_inter_col_ptrs_idx["idx"]
-                    new_row_idx = np.r_[self_only_row_ptrs_idx["idx"],
+            
+                if sdf_inter_row_ptrs_idx["ptr"].size > 0:
+                    
+                    vstack_smatrix.append((sdf_ext_cols_smatrix[sdf_inter_row_ptrs_idx["ptr"],:]+self_ext_cols_smatrix[self_inter_row_ptrs_idx["ptr"],:])/2.0)
+                    
+                    new_row_idx = np.r_[new_row_idx,
+                                        sdf_inter_row_ptrs_idx["idx"]]
+                
+                
+                if sdf_only_row_ptrs_idx["ptr"].size > 0:
+                    
+                    vstack_smatrix.append(sdf_ext_cols_smatrix[sdf_only_row_ptrs_idx["ptr"],:])
+                    
+                    new_row_idx = np.r_[new_row_idx,
                                         sdf_only_row_ptrs_idx["idx"]]
+                    
+                    
+                new_smatrix = sparse.vstack(vstack_smatrix).tocsc()
+                new_col_idx = self_inter_col_ptrs_idx["idx"]
+                
                     
         elif method == "force_append":
                 
