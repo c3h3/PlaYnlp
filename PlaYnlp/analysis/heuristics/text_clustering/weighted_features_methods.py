@@ -239,9 +239,16 @@ def weighted_features_summarizer(sdtm, init_group_ptr):
 def get_eps_neighborhood_ptrs(sdtm, init_group_ptr=[], eps=0.1):
     return (weighted_features_summarizer(sdtm=sdtm, init_group_ptr=init_group_ptr) >= eps)._filtered_ptrs
 
+def get_eps_neighborhood_idx(sdtm, init_group_ptr=[], eps=0.1):
+    return (weighted_features_summarizer(sdtm=sdtm, init_group_ptr=init_group_ptr) >= eps)._filtered_idx
+
     
 def get_topk_neighborhood_ptrs(sdtm, init_group_ptr=[], k=20, reverse=False):
     return weighted_features_summarizer(sdtm=sdtm, init_group_ptr=init_group_ptr).top_k_ptrs(k, reverse)
+
+
+def get_topk_neighborhood_idx(sdtm, init_group_ptr=[], k=20, reverse=False):
+    return weighted_features_summarizer(sdtm=sdtm, init_group_ptr=init_group_ptr).top_k_idx(k, reverse)
 
 
 def find_stable_eps_neighborhood(sdtm, init_group_ptr=[], eps=0.1, max_iters=50, max_group_size=50):
