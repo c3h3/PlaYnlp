@@ -39,7 +39,7 @@ def weighted_features_knn(sdtm, init_group_ptr, ws, top_k=20):
     ws_norm = ws_norm / np.max(ws_norm)
     results_dict = {}
     results_dict["top_k_idx"] = sdtm._row_idx[ws_norm.argsort()[:top_k]]
-    results_dict["top_k_dist"] = ws_norm[ws_norm.argsort()[:top_k]]
+    results_dict["top_k_scores"] = ws_norm[ws_norm.argsort()[:top_k]]
     return results_dict
 
 
