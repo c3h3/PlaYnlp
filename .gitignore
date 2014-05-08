@@ -1,0 +1,48 @@
+# Python #
+##########
+*.pyc
+
+
+# IPython Notebook #
+####################
+.ipynb_checkpoints
+
+# OS generated files #
+######################
+
+# R related #
+#############
+
+
+# eclipse related #
+###################
+.project
+.pydevproject
+
+# dataset related #
+###################
+*.csv
+
+LectureNotePacketSciCompMeth.pdf
+
+# animation related #
+#####################
+*.mp4
+
+# pickle files      #
+#####################
+*.pickle
+
+
+recently_reading/
+
+lecture_videos/
+build/
+dist/
+PlaYnlp.egg-info/
+
+ni_ipynbs/
+try_ipynbs/
+ptt_corpus_pickle/
+.settings/
+
